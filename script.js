@@ -5,7 +5,12 @@ class NovaOS {
         this.windows = new Map();
         this.windowZIndex = 100;
         this.fileSystem = null;
+        this.apps = new Map();
         this.init();
+    }
+
+    registerApp(app) {
+        this.apps.set(app.name, app);
     }
 
     init() {
@@ -335,18 +340,11 @@ class NovaOS {
             return;
         }
 
-        const apps = {
-            'file-explorer': { title: 'File Explorer', icon: '📁', content: this.createFileExplorer() },
-            'terminal': { title: 'Terminal', icon: '⌘', content: this.createTerminal() },
-            'text-editor': { title: 'Text Editor', icon: '📝', content: this.createTextEditor() },
-            'calculator': { title: 'Calculator', icon: '🔢', content: this.createCalculator() },
-            'settings': { title: 'Settings', icon: '⚙️', content: this.createSettings() }
-        };
-
-        const app = apps[appName];
+        const app = this.apps.get(appName);
         if (!app) return;
 
-        this.createWindow(appName, app.title, app.icon, app.content);
+        const content = app.createContent ? app.createContent(this) : '';
+        this.createWindow(appName, app.title, app.icon, content);
     }
 
     createWindow(id, title, icon, content) {
@@ -413,78 +411,12 @@ class NovaOS {
         this.windows.set(id, { element: windowEl, title, icon });
 
         // Initialize app-specific features
-        if (id === 'terminal') this.initTerminal(windowEl);
-        if (id === 'calculator') this.initCalculator(windowEl);
-        if (id === 'text-editor') this.initTextEditor(windowEl);
-        if (id === 'file-explorer') this.initFileExplorer(windowEl);
-        if (id === 'settings') this.initSettings(windowEl);
-    }
-
-    initSettings(windowEl) {
-        // Handle tab switching
-        const tabs = windowEl.querySelectorAll('.settings-tab');
-        const contents = windowEl.querySelectorAll('.settings-tab-content');
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabName = tab.dataset.tab;
-
-                // Update active tab
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                // Update active content
-                contents.forEach(c => c.classList.remove('active'));
-                const content = windowEl.querySelector(`[data-content="${tabName}"]`);
-                if (content) content.classList.add('active');
-
-                // Load changelog if changelog tab
-                if (tabName === 'changelog') {
-                    this.loadChangelog(windowEl);
-                }
-            });
-        });
-    }
-
-    async loadChangelog(windowEl) {
-        const viewer = windowEl.querySelector('#changelog-viewer');
-        if (!viewer) return;
-
-        try {
-            const response = await fetch('CHANGELOG.md');
-            const text = await response.text();
-            viewer.innerHTML = this.parseMarkdown(text);
-        } catch (error) {
-            viewer.innerHTML = '<p style="color: var(--danger);">Error loading changelog.</p>';
+        const app = this.apps.get(id);
+        if (app && app.init) {
+            app.init(windowEl, this);
         }
     }
 
-    parseMarkdown(md) {
-        // Simple markdown parser
-        let html = md
-            // Headers
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            // Bold
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-            // Lists
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
-            // Links
-            .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
-            // Line breaks
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
-
-        // Wrap in paragraphs
-        html = '<p>' + html + '</p>';
-
-        // Fix list items
-        html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
-        html = html.replace(/<\/ul><br><ul>/g, '');
-
-        return html;
-    }
 
     makeWindowDraggable(windowEl, handle) {
         let isDragging = false;
@@ -636,84 +568,20 @@ class NovaOS {
         taskbarApps.appendChild(appEl);
     }
 
-    createFileExplorer() {
-        return `
-            <div class="file-explorer-toolbar">
-                <button class="toolbar-btn" onclick="novaOS.fileExplorerNewFolder()">📁 New Folder</button>
-                <button class="toolbar-btn" onclick="novaOS.fileExplorerNewFile()">📄 New File</button>
-                <button class="toolbar-btn" onclick="novaOS.fileExplorerRefresh()">🔄 Refresh</button>
-            </div>
-            <div id="file-explorer-path" style="margin-bottom: 15px; color: #94a3b8; font-size: 13px;">/</div>
-            <div class="file-list" id="file-list"></div>
-        `;
-    }
-
-    initFileExplorer(windowEl) {
-        this.currentPath = '/';
-        this.refreshFileList();
-    }
-
-    refreshFileList() {
-        const fileList = document.getElementById('file-list');
-        if (!fileList) return;
-
-        const files = this.fileSystem.listDirectory(this.currentPath);
-        fileList.innerHTML = '';
-
-        if (this.currentPath !== '/') {
-            const backItem = document.createElement('div');
-            backItem.className = 'file-item';
-            backItem.innerHTML = '<span class="file-icon">⬆️</span><span>..</span>';
-            backItem.addEventListener('dblclick', () => {
-                const parts = this.currentPath.split('/').filter(p => p);
-                parts.pop();
-                this.currentPath = '/' + parts.join('/');
-                if (this.currentPath === '/') this.currentPath = '/';
-                this.refreshFileList();
-            });
-            fileList.appendChild(backItem);
-        }
-
-        files.forEach(file => {
-            const item = document.createElement('div');
-            item.className = 'file-item';
-            const icon = file.type === 'directory' ? '📁' : '📄';
-            item.innerHTML = `<span class="file-icon">${icon}</span><span>${file.name}</span>`;
-
-            item.addEventListener('dblclick', () => {
-                if (file.type === 'directory') {
-                    this.currentPath = this.currentPath === '/' ? '/' + file.name : this.currentPath + '/' + file.name;
-                    this.refreshFileList();
-                    document.getElementById('file-explorer-path').textContent = this.currentPath;
-                } else {
-                    this.openFileInTextEditor(this.currentPath + '/' + file.name);
-                }
-            });
-
-            fileList.appendChild(item);
-        });
-
-        document.getElementById('file-explorer-path').textContent = this.currentPath;
-    }
-
+    // File Explorer methods called from app
     fileExplorerNewFolder() {
-        const name = prompt('Enter folder name:');
-        if (name) {
-            this.fileSystem.createDirectory(this.currentPath + '/' + name);
-            this.refreshFileList();
-        }
+        const app = this.apps.get('file-explorer');
+        if (app) app.newFolder(this);
     }
 
     fileExplorerNewFile() {
-        const name = prompt('Enter file name:');
-        if (name) {
-            this.fileSystem.createFile(this.currentPath + '/' + name, '');
-            this.refreshFileList();
-        }
+        const app = this.apps.get('file-explorer');
+        if (app) app.newFile(this);
     }
 
     fileExplorerRefresh() {
-        this.refreshFileList();
+        const app = this.apps.get('file-explorer');
+        if (app) app.refresh(this);
     }
 
     openFileInTextEditor(path) {
@@ -730,285 +598,19 @@ class NovaOS {
         }
     }
 
-    createTerminal() {
-        return `
-            <div class="terminal-content" id="terminal-output">
-                <div class="terminal-line">NovaOS Terminal v1.0</div>
-                <div class="terminal-line">Type 'help' for available commands</div>
-                <div class="terminal-line"><span class="terminal-prompt">user@novaos:~$</span> <input type="text" class="terminal-input" id="terminal-input"></div>
-            </div>
-        `;
-    }
 
-    initTerminal(windowEl) {
-        const input = windowEl.querySelector('#terminal-input');
-        input.focus();
-
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const command = input.value.trim();
-                this.executeTerminalCommand(command, windowEl);
-                input.value = '';
-            }
-        });
-    }
-
-    executeTerminalCommand(command, windowEl) {
-        const output = windowEl.querySelector('#terminal-output');
-        const commandLine = document.createElement('div');
-        commandLine.className = 'terminal-line';
-        commandLine.innerHTML = `<span class="terminal-prompt">user@novaos:~$</span> ${command}`;
-        output.insertBefore(commandLine, output.lastElementChild);
-
-        const result = document.createElement('div');
-        result.className = 'terminal-line';
-
-        const commands = {
-            help: 'Available commands: help, clear, date, echo, ls, cat, whoami, uname, neofetch',
-            clear: () => {
-                output.innerHTML = '<div class="terminal-line"><span class="terminal-prompt">user@novaos:~$</span> <input type="text" class="terminal-input" id="terminal-input"></div>';
-                this.initTerminal(windowEl);
-                return null;
-            },
-            date: new Date().toString(),
-            whoami: this.currentUser,
-            uname: 'NovaOS 1.0 (Web Edition)',
-            ls: this.fileSystem.listDirectory('/').map(f => f.name).join('  '),
-            neofetch: `
-                   ___<br>
-                  /   \\     user@novaos<br>
-                 |  O  |    OS: NovaOS 1.0<br>
-                 |  _  |    Kernel: Nova 5.15<br>
-                  \\___/     Shell: novash<br>
-                            Terminal: NovaTerminal<br>
-            `
-        };
-
-        if (command.startsWith('echo ')) {
-            result.innerHTML = command.substring(5);
-        } else if (command.startsWith('cat ')) {
-            const filename = command.substring(4);
-            const content = this.fileSystem.readFile('/' + filename);
-            result.innerHTML = content !== null ? content.replace(/\n/g, '<br>') : `cat: ${filename}: No such file`;
-        } else if (commands[command]) {
-            const res = typeof commands[command] === 'function' ? commands[command]() : commands[command];
-            if (res !== null) result.innerHTML = res;
-        } else if (command) {
-            result.innerHTML = `Command not found: ${command}`;
-        }
-
-        if (result.innerHTML) {
-            output.insertBefore(result, output.lastElementChild);
-        }
-
-        output.scrollTop = output.scrollHeight;
-        windowEl.querySelector('#terminal-input').focus();
-    }
-
-    createTextEditor() {
-        return `
-            <div class="text-editor-toolbar">
-                <button class="toolbar-btn" onclick="novaOS.saveTextFile()">💾 Save</button>
-                <button class="toolbar-btn" onclick="novaOS.clearTextEditor()">🗑️ Clear</button>
-            </div>
-            <textarea class="text-editor-area" id="text-editor-content" placeholder="Start typing..."></textarea>
-        `;
-    }
-
-    initTextEditor(windowEl) {
-        // Nothing special needed for initialization
-    }
-
+    // Text Editor methods called from app
     saveTextFile() {
-        const textarea = document.getElementById('text-editor-content');
-        if (!textarea) return;
-
-        let filename = textarea.dataset.currentFile;
-        if (!filename) {
-            filename = prompt('Enter filename:');
-            if (!filename) return;
-            if (!filename.startsWith('/')) filename = '/' + filename;
-        }
-
-        this.fileSystem.createFile(filename, textarea.value);
-        alert('File saved successfully!');
-        textarea.dataset.currentFile = filename;
+        const app = this.apps.get('text-editor');
+        if (app) app.save(this);
     }
 
     clearTextEditor() {
-        const textarea = document.getElementById('text-editor-content');
-        if (textarea) {
-            textarea.value = '';
-            delete textarea.dataset.currentFile;
-        }
+        const app = this.apps.get('text-editor');
+        if (app) app.clear();
     }
 
-    createCalculator() {
-        return `
-            <div class="calculator-display" id="calc-display">0</div>
-            <div class="calculator-buttons" id="calc-buttons">
-                <button class="calc-btn" data-value="7">7</button>
-                <button class="calc-btn" data-value="8">8</button>
-                <button class="calc-btn" data-value="9">9</button>
-                <button class="calc-btn operator" data-value="/">÷</button>
-                <button class="calc-btn" data-value="4">4</button>
-                <button class="calc-btn" data-value="5">5</button>
-                <button class="calc-btn" data-value="6">6</button>
-                <button class="calc-btn operator" data-value="*">×</button>
-                <button class="calc-btn" data-value="1">1</button>
-                <button class="calc-btn" data-value="2">2</button>
-                <button class="calc-btn" data-value="3">3</button>
-                <button class="calc-btn operator" data-value="-">−</button>
-                <button class="calc-btn" data-value="0">0</button>
-                <button class="calc-btn" data-value=".">.</button>
-                <button class="calc-btn operator" data-value="=">=</button>
-                <button class="calc-btn operator" data-value="+">+</button>
-            </div>
-            <button class="calc-btn" data-value="C" style="margin-top: 10px; grid-column: 1 / -1;">Clear</button>
-        `;
-    }
 
-    initCalculator(windowEl) {
-        let currentValue = '0';
-        let previousValue = null;
-        let operation = null;
-
-        const display = windowEl.querySelector('#calc-display');
-        const buttons = windowEl.querySelectorAll('.calc-btn');
-
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const value = btn.dataset.value;
-
-                if (value === 'C') {
-                    currentValue = '0';
-                    previousValue = null;
-                    operation = null;
-                    display.textContent = currentValue;
-                } else if (['+', '-', '*', '/'].includes(value)) {
-                    if (previousValue !== null && operation !== null) {
-                        currentValue = this.calculate(previousValue, currentValue, operation);
-                        display.textContent = currentValue;
-                    }
-                    previousValue = currentValue;
-                    currentValue = '0';
-                    operation = value;
-                } else if (value === '=') {
-                    if (previousValue !== null && operation !== null) {
-                        currentValue = this.calculate(previousValue, currentValue, operation);
-                        display.textContent = currentValue;
-                        previousValue = null;
-                        operation = null;
-                    }
-                } else {
-                    if (currentValue === '0' && value !== '.') {
-                        currentValue = value;
-                    } else {
-                        currentValue += value;
-                    }
-                    display.textContent = currentValue;
-                }
-            });
-        });
-    }
-
-    calculate(a, b, op) {
-        const num1 = parseFloat(a);
-        const num2 = parseFloat(b);
-
-        switch(op) {
-            case '+': return String(num1 + num2);
-            case '-': return String(num1 - num2);
-            case '*': return String(num1 * num2);
-            case '/': return String(num1 / num2);
-            default: return b;
-        }
-    }
-
-    createSettings() {
-        const users = JSON.parse(localStorage.getItem('novaos_users'));
-        const userCount = Object.keys(users).length;
-        const fsSize = new Blob([localStorage.getItem('novaos_filesystem')]).size;
-
-        return `
-            <div class="settings-tabs">
-                <div class="settings-tab active" data-tab="general">General</div>
-                <div class="settings-tab" data-tab="keyboard">Keyboard Shortcuts</div>
-                <div class="settings-tab" data-tab="changelog">Changelog</div>
-            </div>
-            <div class="settings-content">
-                <div class="settings-tab-content active" data-content="general">
-                    <div class="settings-section">
-                        <h3>System Information</h3>
-                        <div class="setting-item">
-                            <div class="setting-label">Operating System</div>
-                            <div class="setting-value">NovaOS 2.0</div>
-                        </div>
-                        <div class="setting-item">
-                            <div class="setting-label">Current User</div>
-                            <div class="setting-value">${this.currentUser}</div>
-                        </div>
-                        <div class="setting-item">
-                            <div class="setting-label">Total Users</div>
-                            <div class="setting-value">${userCount}</div>
-                        </div>
-                    </div>
-                    <div class="settings-section">
-                        <h3>Storage</h3>
-                        <div class="setting-item">
-                            <div class="setting-label">File System Size</div>
-                            <div class="setting-value">${(fsSize / 1024).toFixed(2)} KB</div>
-                        </div>
-                    </div>
-                    <div class="settings-section">
-                        <h3>About</h3>
-                        <div class="setting-item">
-                            <div class="setting-label">Version</div>
-                            <div class="setting-value">2.0.0</div>
-                        </div>
-                        <div class="setting-item">
-                            <div class="setting-label">Build</div>
-                            <div class="setting-value">2024.11.17</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="settings-tab-content" data-content="keyboard">
-                    <div class="settings-section">
-                        <h3>Keyboard Shortcuts</h3>
-                        <div class="shortcuts-list">
-                            <div class="shortcut-item">
-                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>W</kbd></span>
-                                <span class="shortcut-desc">Close active window</span>
-                            </div>
-                            <div class="shortcut-item">
-                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>M</kbd></span>
-                                <span class="shortcut-desc">Minimize active window</span>
-                            </div>
-                            <div class="shortcut-item">
-                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>N</kbd></span>
-                                <span class="shortcut-desc">New Files window</span>
-                            </div>
-                            <div class="shortcut-item">
-                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>T</kbd></span>
-                                <span class="shortcut-desc">New Terminal window</span>
-                            </div>
-                            <div class="shortcut-item">
-                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>,</kbd></span>
-                                <span class="shortcut-desc">Open Settings</span>
-                            </div>
-                            <div class="shortcut-item">
-                                <span class="shortcut-keys"><kbd>Esc</kbd></span>
-                                <span class="shortcut-desc">Close start menu</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="settings-tab-content" data-content="changelog">
-                    <div id="changelog-viewer" class="changelog-viewer">Loading changelog...</div>
-                </div>
-            </div>
-        `;
-    }
 
     logout() {
         this.currentUser = null;
@@ -1123,3 +725,14 @@ class FileSystem {
 
 // Initialize NovaOS
 const novaOS = new NovaOS();
+
+// Register apps (loaded from external files)
+// Apps will be registered once their scripts are loaded
+window.addEventListener('DOMContentLoaded', () => {
+    // Apps are registered via their own script tags
+    if (typeof FileExplorerApp !== 'undefined') novaOS.registerApp(FileExplorerApp);
+    if (typeof TerminalApp !== 'undefined') novaOS.registerApp(TerminalApp);
+    if (typeof TextEditorApp !== 'undefined') novaOS.registerApp(TextEditorApp);
+    if (typeof CalculatorApp !== 'undefined') novaOS.registerApp(CalculatorApp);
+    if (typeof SettingsApp !== 'undefined') novaOS.registerApp(SettingsApp);
+});
