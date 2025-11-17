@@ -5,7 +5,7 @@ class NovaOS {
         this.windows = new Map();
         this.windowZIndex = 100;
         this.fileSystem = null;
-        this.apps = new Map();
+        this.apps = {};
         this.init();
     }
 
@@ -280,8 +280,20 @@ class NovaOS {
         }, 300);
     }
 
+    initApps() {
+        // Initialize all application modules
+        this.apps.fileExplorer = new FileExplorer(this);
+        this.apps.terminal = new Terminal(this);
+        this.apps.textEditor = new TextEditor(this);
+        this.apps.calculator = new Calculator(this);
+        this.apps.settings = new Settings(this);
+    }
+
     initDesktop() {
         this.fileSystem = new FileSystem();
+
+        // Initialize apps
+        this.initApps();
 
         // Update current user name
         document.getElementById('current-user-name').textContent = this.currentUser;
@@ -340,14 +352,23 @@ class NovaOS {
             return;
         }
 
-        const app = this.apps.get(appName);
-        if (!app) return;
+        // Map app names to app instances
+        const appMap = {
+            'file-explorer': this.apps.fileExplorer,
+            'terminal': this.apps.terminal,
+            'text-editor': this.apps.textEditor,
+            'calculator': this.apps.calculator,
+            'settings': this.apps.settings
+        };
 
-        const content = app.createContent ? app.createContent(this) : '';
-        this.createWindow(appName, app.title, app.icon, content);
+        const appInstance = appMap[appName];
+        if (!appInstance) return;
+
+        const appInfo = appInstance.getAppInfo();
+        this.createWindow(appName, appInfo.title, appInfo.icon, appInfo.content, appInstance);
     }
 
-    createWindow(id, title, icon, content) {
+    createWindow(id, title, icon, content, appInstance) {
         const windowEl = document.createElement('div');
         windowEl.className = 'window';
         windowEl.dataset.id = id;
@@ -410,13 +431,11 @@ class NovaOS {
         // Store window
         this.windows.set(id, { element: windowEl, title, icon });
 
-        // Initialize app-specific features
-        const app = this.apps.get(id);
-        if (app && app.init) {
-            app.init(windowEl, this);
+        // Initialize app using the app instance
+        if (appInstance && typeof appInstance.init === 'function') {
+            appInstance.init(windowEl);
         }
     }
-
 
     makeWindowDraggable(windowEl, handle) {
         let isDragging = false;
@@ -567,50 +586,6 @@ class NovaOS {
 
         taskbarApps.appendChild(appEl);
     }
-
-    // File Explorer methods called from app
-    fileExplorerNewFolder() {
-        const app = this.apps.get('file-explorer');
-        if (app) app.newFolder(this);
-    }
-
-    fileExplorerNewFile() {
-        const app = this.apps.get('file-explorer');
-        if (app) app.newFile(this);
-    }
-
-    fileExplorerRefresh() {
-        const app = this.apps.get('file-explorer');
-        if (app) app.refresh(this);
-    }
-
-    openFileInTextEditor(path) {
-        const content = this.fileSystem.readFile(path);
-        if (content !== null) {
-            this.openApp('text-editor');
-            setTimeout(() => {
-                const textarea = document.getElementById('text-editor-content');
-                if (textarea) {
-                    textarea.value = content;
-                    textarea.dataset.currentFile = path;
-                }
-            }, 100);
-        }
-    }
-
-
-    // Text Editor methods called from app
-    saveTextFile() {
-        const app = this.apps.get('text-editor');
-        if (app) app.save(this);
-    }
-
-    clearTextEditor() {
-        const app = this.apps.get('text-editor');
-        if (app) app.clear();
-    }
-
-
 
     logout() {
         this.currentUser = null;

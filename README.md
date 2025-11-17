@@ -298,13 +298,13 @@ Browser localStorage typically allows 5-10MB of storage. NovaOS uses minimal spa
 
 ## License
 
-**PROPRIETARY SOFTWARE** - All rights reserved.
+**PROPRIETARY SOFTWARE** - Copyright (c) 2025 NovaOS. All Rights Reserved.
 
-This software is proprietary and confidential. Unauthorized copying, modification, distribution, or use is strictly prohibited. See the LICENSE file for complete terms.
+This is proprietary software. No license is granted for use, modification, or distribution without explicit written permission from NovaOS.
 
 ## Credits
 
-Created with ❤️ using modern web technologies.
+NovaOS 25U11 Update - November 17, 2025
 
 ---
 
