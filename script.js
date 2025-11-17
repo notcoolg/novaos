@@ -733,7 +733,7 @@ class NovaOS {
     createTerminal() {
         return `
             <div class="terminal-content" id="terminal-output">
-                <div class="terminal-line">NovaOS Terminal v1.0</div>
+                <div class="terminal-line">NovaOS Terminal 25U11</div>
                 <div class="terminal-line">Type 'help' for available commands</div>
                 <div class="terminal-line"><span class="terminal-prompt">user@novaos:~$</span> <input type="text" class="terminal-input" id="terminal-input"></div>
             </div>
@@ -772,13 +772,13 @@ class NovaOS {
             },
             date: new Date().toString(),
             whoami: this.currentUser,
-            uname: 'NovaOS 1.0 (Web Edition)',
+            uname: 'NovaOS 25U11 (Build 2025.11.17)',
             ls: this.fileSystem.listDirectory('/').map(f => f.name).join('  '),
             neofetch: `
                    ___<br>
                   /   \\     user@novaos<br>
-                 |  O  |    OS: NovaOS 1.0<br>
-                 |  _  |    Kernel: Nova 5.15<br>
+                 |  O  |    OS: NovaOS 25U11<br>
+                 |  _  |    Build: 2025.11.17<br>
                   \\___/     Shell: novash<br>
                             Terminal: NovaTerminal<br>
             `
@@ -942,7 +942,7 @@ class NovaOS {
                         <h3>System Information</h3>
                         <div class="setting-item">
                             <div class="setting-label">Operating System</div>
-                            <div class="setting-value">NovaOS 2.0</div>
+                            <div class="setting-value">NovaOS 25U11</div>
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">Current User</div>
@@ -964,11 +964,11 @@ class NovaOS {
                         <h3>About</h3>
                         <div class="setting-item">
                             <div class="setting-label">Version</div>
-                            <div class="setting-value">2.0.0</div>
+                            <div class="setting-value">25U11</div>
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">Build</div>
-                            <div class="setting-value">2024.11.17</div>
+                            <div class="setting-value">2025.11.17</div>
                         </div>
                     </div>
                 </div>

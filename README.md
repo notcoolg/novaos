@@ -2,8 +2,8 @@
 
 A stunning macOS-inspired web-based operating system with advanced window management, beautiful animations, and a complete desktop environment.
 
-![NovaOS](https://img.shields.io/badge/NovaOS-v2.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![NovaOS](https://img.shields.io/badge/NovaOS-25U11-blue)
+![License](https://img.shields.io/badge/license-Proprietary-red)
 
 ## Features
 
@@ -268,20 +268,15 @@ Browser localStorage typically allows 5-10MB of storage. NovaOS uses minimal spa
 - [ ] Notification system
 - [ ] Context menus (right-click)
 
-## Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-
 ## License
 
-MIT License - feel free to use this project for learning and experimentation.
+**PROPRIETARY SOFTWARE** - Copyright (c) 2025 NovaOS. All Rights Reserved.
+
+This is proprietary software. No license is granted for use, modification, or distribution without explicit written permission from NovaOS.
 
 ## Credits
 
-Created with ❤️ using modern web technologies.
+NovaOS 25U11 Update - November 17, 2025
 
 ---
 

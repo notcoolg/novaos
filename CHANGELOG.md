@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Application window styling
 - Overall user experience
 
-## [1.0.0] - 2024-11-17
+## [1.0.0] - 2025-11-17
 
 ### Added
 - Initial release of NovaOS
