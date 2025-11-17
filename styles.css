@@ -5,24 +5,36 @@
 }
 
 :root {
-    --primary-color: #6366f1;
-    --secondary-color: #8b5cf6;
-    --dark-bg: #0f172a;
-    --darker-bg: #020617;
-    --light-text: #f1f5f9;
-    --gray-text: #94a3b8;
-    --window-bg: #1e293b;
-    --border-color: #334155;
-    --success: #10b981;
-    --danger: #ef4444;
+    --primary-color: #007AFF;
+    --secondary-color: #5856D6;
+    --accent-color: #FF9500;
+    --dark-bg: #1c1c1e;
+    --darker-bg: #000000;
+    --light-text: #ffffff;
+    --gray-text: #8e8e93;
+    --window-bg: rgba(40, 40, 43, 0.95);
+    --window-titlebar: rgba(30, 30, 32, 0.98);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --success: #34C759;
+    --warning: #FFCC00;
+    --danger: #FF3B30;
+    --close-btn: #FF5F57;
+    --minimize-btn: #FFBD2E;
+    --maximize-btn: #28C840;
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 10px 40px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
+    --blur-amount: 40px;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
     overflow: hidden;
     height: 100vh;
     background: var(--darker-bg);
     color: var(--light-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Screen Management */
@@ -91,7 +103,8 @@ body {
 }
 
 .boot-logo {
-    animation: pulse 2s ease-in-out infinite;
+    animation: bootPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.5));
 }
 
 .boot-logo svg {
@@ -99,14 +112,25 @@ body {
     height: 150px;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 0.8; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.05); }
+@keyframes bootPulse {
+    0%, 100% {
+        opacity: 0.9;
+        transform: scale(1);
+        filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.8));
+    }
 }
 
 /* Login Screen */
 #login-screen {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background:
+        radial-gradient(ellipse at top, rgba(0, 122, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(88, 86, 214, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #1a1a1c 0%, #2c2c2e 100%);
 }
 
 .login-container {
@@ -137,14 +161,15 @@ body {
 
 .login-box {
     position: relative;
-    background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(20px);
+    background: rgba(30, 30, 32, 0.75);
+    backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
     padding: 50px 60px;
     border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     min-width: 400px;
-    animation: slideUp 0.6s ease;
+    animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes slideUp {
@@ -295,9 +320,21 @@ body {
     width: 100%;
     height: 100%;
     background:
-        linear-gradient(135deg, #0f172a 0%, #1e293b 100%),
-        url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="none"/><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
-    background-size: cover, 100px 100px;
+        radial-gradient(ellipse at top left, rgba(0, 122, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at top right, rgba(88, 86, 214, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom left, rgba(255, 149, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(52, 199, 89, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #1a1a1c 0%, #2c2c2e 100%);
+    animation: desktopShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes desktopShift {
+    0% {
+        filter: hue-rotate(0deg) brightness(1);
+    }
+    100% {
+        filter: hue-rotate(5deg) brightness(1.05);
+    }
 }
 
 .desktop-icons {
@@ -310,27 +347,43 @@ body {
 }
 
 .desktop-icon {
-    width: 100px;
+    width: 90px;
     cursor: pointer;
     text-align: center;
-    padding: 10px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    padding: 12px 8px 8px 8px;
+    border-radius: 10px;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .desktop-icon:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transform: scale(1.05);
+}
+
+.desktop-icon:active {
+    transform: scale(0.95);
 }
 
 .desktop-icon .icon {
-    font-size: 48px;
-    margin-bottom: 5px;
+    font-size: 56px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    transition: transform 0.2s ease;
+}
+
+.desktop-icon:hover .icon {
+    transform: translateY(-2px);
 }
 
 .icon-label {
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--light-text);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    letter-spacing: -0.01em;
 }
 
 /* Windows */
@@ -339,28 +392,35 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: calc(100% - 60px);
+    height: calc(100% - 90px);
     z-index: 10;
 }
 
 .window {
     position: absolute;
     background: var(--window-bg);
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-color);
     min-width: 400px;
     min-height: 300px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.window:hover {
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
 }
 
 .window.maximized {
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: calc(100% - 60px) !important;
+    height: calc(100% - 90px) !important;
     border-radius: 0;
 }
 
@@ -369,59 +429,82 @@ body {
 }
 
 .window-titlebar {
-    background: var(--darker-bg);
-    padding: 12px 15px;
+    background: var(--window-titlebar);
+    backdrop-filter: blur(var(--blur-amount));
+    -webkit-backdrop-filter: blur(var(--blur-amount));
+    padding: 10px 15px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     cursor: move;
     user-select: none;
     border-bottom: 1px solid var(--border-color);
+    position: relative;
 }
 
 .window-title {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .window-title .icon {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .window-controls {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .window-control {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    font-size: 8px;
+    color: rgba(0, 0, 0, 0.7);
+    font-weight: bold;
+}
+
+.window-control.close {
+    background: var(--close-btn);
+}
+
+.window-control.minimize {
+    background: var(--minimize-btn);
+}
+
+.window-control.maximize {
+    background: var(--maximize-btn);
 }
 
 .window-control:hover {
-    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+    filter: brightness(1.1);
 }
 
-.window-control.close:hover {
-    background: var(--danger);
+.window-control.close:hover::after {
+    content: '×';
 }
 
-.window-control.maximize:hover {
-    background: var(--success);
+.window-control.minimize:hover::after {
+    content: '−';
 }
 
-.window-control.minimize:hover {
-    background: var(--primary-color);
+.window-control.maximize:hover::after {
+    content: '⤢';
 }
 
 .window-content {
@@ -430,36 +513,103 @@ body {
     padding: 20px;
 }
 
-/* Taskbar */
-.taskbar {
+/* Window Resize Handles */
+.window-resize-handle {
     position: absolute;
+    z-index: 10;
+}
+
+.window-resize-handle.resize-right {
+    right: 0;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+}
+
+.window-resize-handle.resize-bottom {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 60px;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border-color);
+    height: 8px;
+    cursor: ns-resize;
+}
+
+.window-resize-handle.resize-corner {
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+}
+
+.window-resize-handle.resize-corner::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 60%,
+        transparent 60%,
+        transparent 70%,
+        rgba(255, 255, 255, 0.2) 70%,
+        rgba(255, 255, 255, 0.2) 80%,
+        transparent 80%
+    );
+    border-radius: 0 0 12px 0;
+}
+
+/* Taskbar (Dock) */
+.taskbar {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: fit-content;
+    height: 68px;
+    background: rgba(30, 30, 32, 0.7);
+    backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    padding: 0 15px;
-    gap: 15px;
+    padding: 8px 16px;
+    gap: 8px;
     z-index: 1000;
+    box-shadow:
+        var(--shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .start-button {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
 }
 
 .start-button:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1) translateY(-4px);
+}
+
+.start-button:active {
+    transform: scale(0.95);
 }
 
 .start-button svg {
@@ -468,95 +618,113 @@ body {
 }
 
 .taskbar-apps {
-    flex: 1;
     display: flex;
-    gap: 10px;
-    overflow-x: auto;
+    gap: 8px;
+    padding: 0 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .taskbar-app {
-    min-width: 200px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 0 15px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
 }
 
 .taskbar-app:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.1) translateY(-4px);
 }
 
-.taskbar-app.active {
-    border-color: var(--primary-color);
-    background: rgba(99, 102, 241, 0.2);
+.taskbar-app:active {
+    transform: scale(0.95);
+}
+
+.taskbar-app.active::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary-color);
 }
 
 .taskbar-app .icon {
-    font-size: 18px;
+    font-size: 28px;
 }
 
 .taskbar-app .label {
-    font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: none;
 }
 
 .system-tray {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 8px;
 }
 
 .tray-time {
-    font-size: 14px;
-    color: var(--gray-text);
-    min-width: 80px;
-    text-align: right;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--light-text);
+    min-width: 50px;
+    text-align: center;
+    letter-spacing: 0.3px;
 }
 
 .tray-icon {
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .tray-icon:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
 }
 
 /* Start Menu */
 .start-menu {
     position: absolute;
-    bottom: 70px;
-    left: 15px;
-    width: 400px;
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 12px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--border-color);
+    bottom: 85px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 360px;
+    background: rgba(30, 30, 32, 0.8);
+    backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     overflow: hidden;
-    transform-origin: bottom left;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 999;
 }
 
 .start-menu.hidden {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: translateX(-50%) scale(0.9) translateY(20px);
     pointer-events: none;
 }
 
@@ -593,18 +761,25 @@ body {
 }
 
 .start-menu-item {
-    padding: 15px 20px;
-    border-radius: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: flex;
     align-items: center;
-    gap: 15px;
-    font-size: 15px;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
 }
 
 .start-menu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(4px);
+}
+
+.start-menu-item:active {
+    transform: scale(0.98);
 }
 
 .start-icon {
@@ -808,6 +983,58 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+@keyframes windowOpen {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.02) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes windowClose {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+}
+
+@keyframes dockBounce {
+    0%, 100% {
+        transform: scale(1) translateY(0);
+    }
+    50% {
+        transform: scale(1.15) translateY(-8px);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(0, 122, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 122, 255, 0.8);
+    }
+}
+
+.window {
+    animation: windowOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.window.closing {
+    animation: windowClose 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 /* Scrollbar */

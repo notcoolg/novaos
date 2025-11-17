@@ -324,17 +324,20 @@ class NovaOS {
 
         windowEl.innerHTML = `
             <div class="window-titlebar">
+                <div class="window-controls">
+                    <div class="window-control close"></div>
+                    <div class="window-control minimize"></div>
+                    <div class="window-control maximize"></div>
+                </div>
                 <div class="window-title">
                     <span class="icon">${icon}</span>
                     <span>${title}</span>
                 </div>
-                <div class="window-controls">
-                    <div class="window-control minimize">−</div>
-                    <div class="window-control maximize">□</div>
-                    <div class="window-control close">×</div>
-                </div>
             </div>
             <div class="window-content">${content}</div>
+            <div class="window-resize-handle resize-right"></div>
+            <div class="window-resize-handle resize-bottom"></div>
+            <div class="window-resize-handle resize-corner"></div>
         `;
 
         document.getElementById('windows-container').appendChild(windowEl);
@@ -347,6 +350,9 @@ class NovaOS {
 
         // Dragging
         this.makeWindowDraggable(windowEl, titlebar);
+
+        // Resizing
+        this.makeWindowResizable(windowEl);
 
         // Controls
         minimizeBtn.addEventListener('click', () => this.minimizeWindow(windowEl));
@@ -398,6 +404,60 @@ class NovaOS {
         });
     }
 
+    makeWindowResizable(windowEl) {
+        const resizeHandles = windowEl.querySelectorAll('.window-resize-handle');
+
+        resizeHandles.forEach(handle => {
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight, startLeft, startTop;
+
+            handle.addEventListener('mousedown', (e) => {
+                if (windowEl.classList.contains('maximized')) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                isResizing = true;
+
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseInt(window.getComputedStyle(windowEl).width, 10);
+                startHeight = parseInt(window.getComputedStyle(windowEl).height, 10);
+                startLeft = windowEl.offsetLeft;
+                startTop = windowEl.offsetTop;
+
+                document.body.style.cursor = handle.style.cursor;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+
+                e.preventDefault();
+
+                const minWidth = 400;
+                const minHeight = 300;
+                const maxWidth = window.innerWidth - startLeft;
+                const maxHeight = window.innerHeight - startTop - 80; // Account for dock
+
+                if (handle.classList.contains('resize-right') || handle.classList.contains('resize-corner')) {
+                    const width = Math.min(Math.max(minWidth, startWidth + (e.clientX - startX)), maxWidth);
+                    windowEl.style.width = width + 'px';
+                }
+
+                if (handle.classList.contains('resize-bottom') || handle.classList.contains('resize-corner')) {
+                    const height = Math.min(Math.max(minHeight, startHeight + (e.clientY - startY)), maxHeight);
+                    windowEl.style.height = height + 'px';
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                }
+            });
+        });
+    }
+
     focusWindow(windowEl) {
         windowEl.style.zIndex = this.windowZIndex++;
 
@@ -416,12 +476,15 @@ class NovaOS {
     }
 
     closeWindow(id, windowEl) {
-        windowEl.remove();
-        this.windows.delete(id);
+        windowEl.classList.add('closing');
+        setTimeout(() => {
+            windowEl.remove();
+            this.windows.delete(id);
 
-        // Remove from taskbar
-        const taskbarApp = document.querySelector(`.taskbar-app[data-id="${id}"]`);
-        if (taskbarApp) taskbarApp.remove();
+            // Remove from taskbar
+            const taskbarApp = document.querySelector(`.taskbar-app[data-id="${id}"]`);
+            if (taskbarApp) taskbarApp.remove();
+        }, 300);
     }
 
     addToTaskbar(id, title, icon, windowEl) {
