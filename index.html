@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaOS</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Boot Screen -->
+    <div id="boot-screen" class="screen active">
+        <div class="boot-container">
+            <div class="bios-header">NovaOS BIOS v2.4.1</div>
+            <div class="boot-text" id="boot-text"></div>
+            <div class="boot-progress">
+                <div class="boot-progress-bar" id="boot-progress-bar"></div>
+            </div>
+            <div class="boot-logo">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="nova-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="url(#nova-gradient)" stroke-width="4" opacity="0.3"/>
+                    <circle cx="100" cy="100" r="60" fill="none" stroke="url(#nova-gradient)" stroke-width="6"/>
+                    <path d="M 100 40 L 120 80 L 100 70 L 80 80 Z" fill="url(#nova-gradient)"/>
+                    <circle cx="100" cy="100" r="15" fill="url(#nova-gradient)"/>
+                    <text x="100" y="175" font-family="'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="bold" fill="url(#nova-gradient)" text-anchor="middle">NOVA</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <div class="login-background"></div>
+            <div class="login-box">
+                <div class="login-logo">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="nova-gradient-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="60" fill="none" stroke="url(#nova-gradient-2)" stroke-width="6"/>
+                        <path d="M 100 40 L 120 80 L 100 70 L 80 80 Z" fill="url(#nova-gradient-2)"/>
+                        <circle cx="100" cy="100" r="15" fill="url(#nova-gradient-2)"/>
+                    </svg>
+                </div>
+                <h1 class="login-title">NovaOS</h1>
+                <div class="user-select" id="user-select">
+                    <div class="user-card" data-username="guest">
+                        <div class="user-avatar">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="50" fill="#6366f1"/>
+                                <circle cx="50" cy="40" r="20" fill="#fff"/>
+                                <ellipse cx="50" cy="85" rx="30" ry="20" fill="#fff"/>
+                            </svg>
+                        </div>
+                        <div class="user-name">Guest</div>
+                    </div>
+                    <div class="user-card new-user" id="new-user-btn">
+                        <div class="user-avatar">
+                            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="50" fill="#8b5cf6"/>
+                                <line x1="50" y1="25" x2="50" y2="75" stroke="#fff" stroke-width="6"/>
+                                <line x1="25" y1="50" x2="75" y2="50" stroke="#fff" stroke-width="6"/>
+                            </svg>
+                        </div>
+                        <div class="user-name">Create User</div>
+                    </div>
+                </div>
+                <div class="login-form hidden" id="login-form">
+                    <input type="password" id="password-input" placeholder="Enter password" class="login-input">
+                    <button id="login-btn" class="login-button">Login</button>
+                    <button id="back-btn" class="login-button secondary">Back</button>
+                </div>
+                <div class="create-user-form hidden" id="create-user-form">
+                    <input type="text" id="new-username" placeholder="Username" class="login-input">
+                    <input type="password" id="new-password" placeholder="Password" class="login-input">
+                    <input type="password" id="confirm-password" placeholder="Confirm Password" class="login-input">
+                    <button id="create-btn" class="login-button">Create Account</button>
+                    <button id="cancel-btn" class="login-button secondary">Cancel</button>
+                </div>
+                <div class="login-time" id="login-time"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop" class="screen">
+        <!-- Desktop Background -->
+        <div class="desktop-background"></div>
+
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" data-app="file-explorer">
+                <div class="icon">📁</div>
+                <div class="icon-label">File Explorer</div>
+            </div>
+            <div class="desktop-icon" data-app="terminal">
+                <div class="icon">⌘</div>
+                <div class="icon-label">Terminal</div>
+            </div>
+            <div class="desktop-icon" data-app="text-editor">
+                <div class="icon">📝</div>
+                <div class="icon-label">Text Editor</div>
+            </div>
+            <div class="desktop-icon" data-app="calculator">
+                <div class="icon">🔢</div>
+                <div class="icon-label">Calculator</div>
+            </div>
+            <div class="desktop-icon" data-app="settings">
+                <div class="icon">⚙️</div>
+                <div class="icon-label">Settings</div>
+            </div>
+        </div>
+
+        <!-- Windows Container -->
+        <div id="windows-container"></div>
+
+        <!-- Taskbar -->
+        <div class="taskbar">
+            <div class="start-button" id="start-button">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="start-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="45" fill="url(#start-gradient)"/>
+                    <path d="M 50 20 L 65 45 L 50 38 L 35 45 Z" fill="#fff"/>
+                    <circle cx="50" cy="50" r="12" fill="#fff"/>
+                </svg>
+            </div>
+            <div class="taskbar-apps" id="taskbar-apps"></div>
+            <div class="system-tray">
+                <div class="tray-time" id="tray-time"></div>
+                <div class="tray-icon" id="user-icon">👤</div>
+            </div>
+        </div>
+
+        <!-- Start Menu -->
+        <div class="start-menu hidden" id="start-menu">
+            <div class="start-menu-header">
+                <div class="start-menu-user">
+                    <div class="user-avatar-small">👤</div>
+                    <div class="user-name-small" id="current-user-name">User</div>
+                </div>
+            </div>
+            <div class="start-menu-apps">
+                <div class="start-menu-item" data-app="file-explorer">
+                    <span class="start-icon">📁</span>
+                    <span>File Explorer</span>
+                </div>
+                <div class="start-menu-item" data-app="terminal">
+                    <span class="start-icon">⌘</span>
+                    <span>Terminal</span>
+                </div>
+                <div class="start-menu-item" data-app="text-editor">
+                    <span class="start-icon">📝</span>
+                    <span>Text Editor</span>
+                </div>
+                <div class="start-menu-item" data-app="calculator">
+                    <span class="start-icon">🔢</span>
+                    <span>Calculator</span>
+                </div>
+                <div class="start-menu-item" data-app="settings">
+                    <span class="start-icon">⚙️</span>
+                    <span>Settings</span>
+                </div>
+            </div>
+            <div class="start-menu-footer">
+                <div class="start-menu-item power" id="logout-btn">
+                    <span class="start-icon">🚪</span>
+                    <span>Logout</span>
+                </div>
+                <div class="start-menu-item power" id="shutdown-btn">
+                    <span class="start-icon">⏻</span>
+                    <span>Shutdown</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
