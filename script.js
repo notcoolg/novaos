@@ -9,6 +9,10 @@ class NovaOS {
         this.init();
     }
 
+    registerApp(app) {
+        this.apps.set(app.name, app);
+    }
+
     init() {
         this.initStorage();
         this.requestFullscreen();
@@ -696,3 +700,14 @@ class FileSystem {
 
 // Initialize NovaOS
 const novaOS = new NovaOS();
+
+// Register apps (loaded from external files)
+// Apps will be registered once their scripts are loaded
+window.addEventListener('DOMContentLoaded', () => {
+    // Apps are registered via their own script tags
+    if (typeof FileExplorerApp !== 'undefined') novaOS.registerApp(FileExplorerApp);
+    if (typeof TerminalApp !== 'undefined') novaOS.registerApp(TerminalApp);
+    if (typeof TextEditorApp !== 'undefined') novaOS.registerApp(TextEditorApp);
+    if (typeof CalculatorApp !== 'undefined') novaOS.registerApp(CalculatorApp);
+    if (typeof SettingsApp !== 'undefined') novaOS.registerApp(SettingsApp);
+});

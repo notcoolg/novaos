@@ -128,6 +128,7 @@ Create new files and folders using the File Explorer or Terminal.
   - CSS Grid and Flexbox layouts
 - **Vanilla JavaScript (ES6+)** - No frameworks or dependencies
   - Object-oriented architecture
+  - Modular application system
   - Event-driven programming
   - Dynamic DOM manipulation
 - **localStorage API** - Client-side persistent storage
@@ -144,12 +145,29 @@ Main operating system class that manages:
 - Desktop environment
 - Window management
 - Application lifecycle
+- Application registry and loading
 
 #### `FileSystem`
 Virtual file system implementation:
 - Directory navigation
 - File creation/reading
 - Data persistence via localStorage
+
+### Modular Application System
+
+Applications are now compartmentalized into separate files in the `/apps` directory:
+- **file-explorer.js** - File browsing and management
+- **terminal.js** - Command-line interface
+- **text-editor.js** - Text file editing
+- **calculator.js** - Basic arithmetic operations
+- **settings.js** - System configuration and information
+
+Each app exports an object with:
+- `name` - Unique identifier
+- `title` - Display name
+- `icon` - Visual icon
+- `createContent(os)` - Generates HTML content
+- `init(windowEl, os)` - Initializes event listeners and functionality
 
 ### Data Structure
 
@@ -215,25 +233,35 @@ Edit CSS variables in `styles.css` for the macOS-inspired theme:
 ```
 
 ### Adding New Applications
-1. Add app definition in `script.js`:
+
+1. Create a new file in `/apps` directory (e.g., `apps/my-app.js`):
 ```javascript
-const apps = {
-    'my-app': {
-        title: 'My App',
-        icon: '🎨',
-        content: this.createMyApp()
+const MyApp = {
+    name: 'my-app',
+    title: 'My App',
+    icon: '🎨',
+
+    createContent(os) {
+        return `<div>My App Content</div>`;
+    },
+
+    init(windowEl, os) {
+        // Initialize event listeners and functionality
     }
-}
+};
 ```
 
-2. Create app content method:
+2. Add script tag to `index.html` before `script.js`:
+```html
+<script src="apps/my-app.js"></script>
+```
+
+3. Register the app in `script.js`:
 ```javascript
-createMyApp() {
-    return `<div>My App Content</div>`;
-}
+if (typeof MyApp !== 'undefined') novaOS.registerApp(MyApp);
 ```
 
-3. Add desktop icon and start menu item in `index.html`
+4. Add desktop icon and start menu item in `index.html`
 
 ## Browser Compatibility
 
