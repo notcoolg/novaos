@@ -10,7 +10,77 @@ class NovaOS {
 
     init() {
         this.initStorage();
+        this.requestFullscreen();
+        this.initKeyboardShortcuts();
         this.startBootSequence();
+    }
+
+    requestFullscreen() {
+        // Auto-request fullscreen on first interaction
+        const tryFullscreen = () => {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+            document.removeEventListener('click', tryFullscreen);
+        };
+        document.addEventListener('click', tryFullscreen, { once: true });
+    }
+
+    initKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Cmd/Ctrl + W - Close active window
+            if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
+                e.preventDefault();
+                const activeWindow = Array.from(this.windows.values())
+                    .map(w => ({ ...w, z: parseInt(w.element.style.zIndex) }))
+                    .sort((a, b) => b.z - a.z)[0];
+                if (activeWindow) {
+                    this.closeWindow(activeWindow.element.dataset.id, activeWindow.element);
+                }
+            }
+
+            // Cmd/Ctrl + M - Minimize active window
+            if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
+                e.preventDefault();
+                const activeWindow = Array.from(this.windows.values())
+                    .map(w => ({ ...w, z: parseInt(w.element.style.zIndex) }))
+                    .sort((a, b) => b.z - a.z)[0];
+                if (activeWindow) {
+                    this.minimizeWindow(activeWindow.element);
+                }
+            }
+
+            // Cmd/Ctrl + N - New Finder window
+            if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+                e.preventDefault();
+                this.openApp('file-explorer');
+            }
+
+            // Cmd/Ctrl + T - New Terminal
+            if ((e.metaKey || e.ctrlKey) && e.key === 't') {
+                e.preventDefault();
+                this.openApp('terminal');
+            }
+
+            // Cmd/Ctrl + , - Settings
+            if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+                e.preventDefault();
+                this.openApp('settings');
+            }
+
+            // Escape - Close start menu
+            if (e.key === 'Escape') {
+                const startMenu = document.getElementById('start-menu');
+                if (!startMenu.classList.contains('hidden')) {
+                    startMenu.classList.add('hidden');
+                }
+            }
+        });
     }
 
     initStorage() {
@@ -43,45 +113,19 @@ class NovaOS {
     }
 
     startBootSequence() {
-        const bootText = document.getElementById('boot-text');
         const progressBar = document.getElementById('boot-progress-bar');
-
-        const bootMessages = [
-            'Initializing NovaOS Boot Sequence...',
-            'Loading BIOS v2.4.1',
-            'Checking system memory... OK',
-            'Detecting hardware devices...',
-            '  - CPU: Nova Processor @ 3.4GHz',
-            '  - RAM: 16GB DDR4',
-            '  - Storage: 512GB NVMe SSD',
-            'Initializing file system...',
-            'Loading kernel modules...',
-            '  - nova_core.ko',
-            '  - nova_graphics.ko',
-            '  - nova_network.ko',
-            'Starting system services...',
-            '  [OK] Nova Display Manager',
-            '  [OK] Nova Network Service',
-            '  [OK] Nova Audio Service',
-            'Preparing user interface...',
-            'NovaOS ready!',
-        ];
-
-        let currentMessage = 0;
         let progress = 0;
 
+        // Simple, clean boot animation like macOS
         const bootInterval = setInterval(() => {
-            if (currentMessage < bootMessages.length) {
-                bootText.innerHTML += bootMessages[currentMessage] + '<br>';
-                bootText.scrollTop = bootText.scrollHeight;
-                currentMessage++;
-                progress = (currentMessage / bootMessages.length) * 100;
-                progressBar.style.width = progress + '%';
-            } else {
+            progress += 2;
+            progressBar.style.width = progress + '%';
+
+            if (progress >= 100) {
                 clearInterval(bootInterval);
-                setTimeout(() => this.showLoginScreen(), 1000);
+                setTimeout(() => this.showLoginScreen(), 500);
             }
-        }, 200);
+        }, 30);
     }
 
     showLoginScreen() {
@@ -373,11 +417,86 @@ class NovaOS {
         if (id === 'calculator') this.initCalculator(windowEl);
         if (id === 'text-editor') this.initTextEditor(windowEl);
         if (id === 'file-explorer') this.initFileExplorer(windowEl);
+        if (id === 'settings') this.initSettings(windowEl);
+    }
+
+    initSettings(windowEl) {
+        // Handle tab switching
+        const tabs = windowEl.querySelectorAll('.settings-tab');
+        const contents = windowEl.querySelectorAll('.settings-tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update active content
+                contents.forEach(c => c.classList.remove('active'));
+                const content = windowEl.querySelector(`[data-content="${tabName}"]`);
+                if (content) content.classList.add('active');
+
+                // Load changelog if changelog tab
+                if (tabName === 'changelog') {
+                    this.loadChangelog(windowEl);
+                }
+            });
+        });
+    }
+
+    async loadChangelog(windowEl) {
+        const viewer = windowEl.querySelector('#changelog-viewer');
+        if (!viewer) return;
+
+        try {
+            const response = await fetch('CHANGELOG.md');
+            const text = await response.text();
+            viewer.innerHTML = this.parseMarkdown(text);
+        } catch (error) {
+            viewer.innerHTML = '<p style="color: var(--danger);">Error loading changelog.</p>';
+        }
+    }
+
+    parseMarkdown(md) {
+        // Simple markdown parser
+        let html = md
+            // Headers
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            // Bold
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            // Lists
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            // Links
+            .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            // Line breaks
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+
+        // Wrap in paragraphs
+        html = '<p>' + html + '</p>';
+
+        // Fix list items
+        html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+        html = html.replace(/<\/ul><br><ul>/g, '');
+
+        return html;
     }
 
     makeWindowDraggable(windowEl, handle) {
         let isDragging = false;
         let currentX, currentY, initialX, initialY;
+        let rafId;
+
+        const updatePosition = () => {
+            if (isDragging) {
+                windowEl.style.left = currentX + 'px';
+                windowEl.style.top = currentY + 'px';
+            }
+        };
 
         handle.addEventListener('mousedown', (e) => {
             if (e.target.closest('.window-controls')) return;
@@ -386,6 +505,7 @@ class NovaOS {
             isDragging = true;
             initialX = e.clientX - windowEl.offsetLeft;
             initialY = e.clientY - windowEl.offsetTop;
+            windowEl.style.willChange = 'left, top';
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -395,12 +515,17 @@ class NovaOS {
             currentX = e.clientX - initialX;
             currentY = e.clientY - initialY;
 
-            windowEl.style.left = currentX + 'px';
-            windowEl.style.top = currentY + 'px';
+            // Use RAF for smooth updates
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(updatePosition);
         });
 
         document.addEventListener('mouseup', () => {
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                windowEl.style.willChange = 'auto';
+                if (rafId) cancelAnimationFrame(rafId);
+            }
         });
     }
 
@@ -806,37 +931,80 @@ class NovaOS {
         const fsSize = new Blob([localStorage.getItem('novaos_filesystem')]).size;
 
         return `
-            <div class="settings-section">
-                <h3>System Information</h3>
-                <div class="setting-item">
-                    <div class="setting-label">Operating System</div>
-                    <div class="setting-value">NovaOS 1.0</div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-label">Current User</div>
-                    <div class="setting-value">${this.currentUser}</div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-label">Total Users</div>
-                    <div class="setting-value">${userCount}</div>
-                </div>
+            <div class="settings-tabs">
+                <div class="settings-tab active" data-tab="general">General</div>
+                <div class="settings-tab" data-tab="keyboard">Keyboard Shortcuts</div>
+                <div class="settings-tab" data-tab="changelog">Changelog</div>
             </div>
-            <div class="settings-section">
-                <h3>Storage</h3>
-                <div class="setting-item">
-                    <div class="setting-label">File System Size</div>
-                    <div class="setting-value">${(fsSize / 1024).toFixed(2)} KB</div>
+            <div class="settings-content">
+                <div class="settings-tab-content active" data-content="general">
+                    <div class="settings-section">
+                        <h3>System Information</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">Operating System</div>
+                            <div class="setting-value">NovaOS 2.0</div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Current User</div>
+                            <div class="setting-value">${this.currentUser}</div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Total Users</div>
+                            <div class="setting-value">${userCount}</div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Storage</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">File System Size</div>
+                            <div class="setting-value">${(fsSize / 1024).toFixed(2)} KB</div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>About</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">Version</div>
+                            <div class="setting-value">2.0.0</div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Build</div>
+                            <div class="setting-value">2024.11.17</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="settings-section">
-                <h3>About</h3>
-                <div class="setting-item">
-                    <div class="setting-label">Version</div>
-                    <div class="setting-value">1.0.0</div>
+                <div class="settings-tab-content" data-content="keyboard">
+                    <div class="settings-section">
+                        <h3>Keyboard Shortcuts</h3>
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>W</kbd></span>
+                                <span class="shortcut-desc">Close active window</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>M</kbd></span>
+                                <span class="shortcut-desc">Minimize active window</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>N</kbd></span>
+                                <span class="shortcut-desc">New Files window</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>T</kbd></span>
+                                <span class="shortcut-desc">New Terminal window</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>,</kbd></span>
+                                <span class="shortcut-desc">Open Settings</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>Esc</kbd></span>
+                                <span class="shortcut-desc">Close start menu</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="setting-item">
-                    <div class="setting-label">Build</div>
-                    <div class="setting-value">2024.11.17</div>
+                <div class="settings-tab-content" data-content="changelog">
+                    <div id="changelog-viewer" class="changelog-viewer">Loading changelog...</div>
                 </div>
             </div>
         `;

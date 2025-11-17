@@ -54,7 +54,7 @@ body {
     visibility: visible;
 }
 
-/* Boot Screen */
+/* Boot Screen - macOS Style */
 #boot-screen {
     background: #000;
     display: flex;
@@ -64,64 +64,44 @@ body {
 
 .boot-container {
     text-align: center;
-    max-width: 600px;
-    width: 90%;
-}
-
-.bios-header {
-    font-family: 'Courier New', monospace;
-    color: #0f0;
-    font-size: 14px;
-    margin-bottom: 30px;
-    text-align: left;
-}
-
-.boot-text {
-    font-family: 'Courier New', monospace;
-    color: #0f0;
-    font-size: 12px;
-    text-align: left;
-    min-height: 200px;
-    margin-bottom: 30px;
-    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 60px;
 }
 
 .boot-progress {
-    width: 100%;
+    width: 200px;
     height: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 2px;
     overflow: hidden;
-    margin-bottom: 40px;
 }
 
 .boot-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    background: rgba(255, 255, 255, 0.9);
     width: 0%;
-    transition: width 0.3s ease;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 .boot-logo {
-    animation: bootPulse 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.5));
+    animation: bootFade 1.5s ease-in-out infinite alternate;
 }
 
 .boot-logo svg {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
+    filter: drop-shadow(0 10px 30px rgba(255, 255, 255, 0.3));
 }
 
-@keyframes bootPulse {
-    0%, 100% {
-        opacity: 0.9;
-        transform: scale(1);
-        filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
+@keyframes bootFade {
+    0% {
+        opacity: 0.6;
     }
-    50% {
+    100% {
         opacity: 1;
-        transform: scale(1.05);
-        filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.8));
     }
 }
 
@@ -368,14 +348,24 @@ body {
 }
 
 .desktop-icon .icon {
-    font-size: 56px;
+    width: 64px;
+    height: 64px;
     margin-bottom: 8px;
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
-    transition: transform 0.2s ease;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+    transition: transform 0.2s ease, filter 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.desktop-icon .icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 .desktop-icon:hover .icon {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
 }
 
 .icon-label {
@@ -939,6 +929,59 @@ body {
     outline: none;
 }
 
+.settings-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0;
+}
+
+.settings-tab {
+    padding: 12px 24px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-text);
+    position: relative;
+}
+
+.settings-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--light-text);
+}
+
+.settings-tab.active {
+    color: var(--primary-color);
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.settings-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.settings-content {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+}
+
+.settings-tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.settings-tab-content.active {
+    display: block;
+}
+
 .settings-section {
     margin-bottom: 30px;
 }
@@ -947,6 +990,13 @@ body {
     font-size: 18px;
     margin-bottom: 15px;
     color: var(--primary-color);
+}
+
+.settings-section h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    color: var(--light-text);
 }
 
 .setting-item {
@@ -966,6 +1016,106 @@ body {
 .setting-value {
     color: var(--gray-text);
     font-size: 13px;
+}
+
+/* Keyboard Shortcuts */
+.shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.shortcut-keys {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+}
+
+.shortcut-keys kbd {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', monospace;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.shortcut-desc {
+    color: var(--gray-text);
+    font-size: 14px;
+}
+
+/* Changelog Viewer */
+.changelog-viewer {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.7;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.changelog-viewer h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.changelog-viewer h2 {
+    font-size: 20px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    color: var(--light-text);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.changelog-viewer h3 {
+    font-size: 16px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+}
+
+.changelog-viewer ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.changelog-viewer li {
+    margin-bottom: 8px;
+    color: var(--light-text);
+}
+
+.changelog-viewer strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.changelog-viewer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.changelog-viewer a:hover {
+    text-decoration: underline;
+}
+
+.changelog-viewer p {
+    margin-bottom: 12px;
+    color: var(--light-text);
 }
 
 /* Animations */
