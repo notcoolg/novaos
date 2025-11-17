@@ -31,13 +31,49 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Inject no-cache meta tags into HTML files
+        # This step inserts cache-busting meta tags into any .html files in the repo
+        # so browsers will revalidate on refresh. It only edits files in the runner workspace
+        # prior to packaging for Pages (it does not commit back to the repo).
+        run: |
+          set -euo pipefail
+          ts=$(date -u +"%Y%m%d%H%M%S")
+          echo "Injecting no-cache meta tags into HTML files (timestamp: $ts)"
+          # Process each HTML file
+          find . -type f -name "*.html" -print0 | while IFS= read -r -d '' file; do
+            # Skip files in .git or actions directories
+            case "$file" in
+              ./.git/*|./.github/*) continue ;;
+            esac
+            if grep -qi '<meta http-equiv="cache-control"' "$file"; then
+              echo "Cache-control meta already present in $file, skipping"
+              continue
+            fi
+            # Insert meta tags after the first <head ...> occurrence (case-insensitive)
+            awk 'BEGIN{IGNORECASE=1; inserted=0}
+              {
+                if(!inserted && tolower($0) ~ /<head[^>]*>/) {
+                  print $0;
+                  print "  <meta http-equiv=\"cache-control\" content=\"no-cache, no-store, must-revalidate\">";
+                  print "  <meta http-equiv=\"expires\" content=\"0\">";
+                  inserted=1;
+                } else {
+                  print $0;
+                }
+              }' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+            echo "Updated $file"
+          done
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload entire repository (workspace) after our injection
           path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
