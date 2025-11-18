@@ -311,6 +311,12 @@ class NovaOS {
         // Initialize dock
         this.initDock();
 
+        // Initialize launchpad
+        this.initLaunchpad();
+
+        // Initialize top bar menus
+        this.initTopBarMenus();
+
         // Update current user name
         document.getElementById('current-user-name').textContent = this.currentUser;
 
@@ -473,13 +479,21 @@ class NovaOS {
         // Add to taskbar
         this.addToTaskbar(id, title, icon, windowEl);
 
+        // Get app menus if available
+        const appMenus = (appInstance && typeof appInstance.getMenus === 'function')
+            ? appInstance.getMenus()
+            : null;
+
         // Store window
-        this.windows.set(id, { element: windowEl, title, icon });
+        this.windows.set(id, { element: windowEl, title, icon, appMenus, appInstance });
 
         // Initialize app using the app instance
         if (appInstance && typeof appInstance.init === 'function') {
             appInstance.init(windowEl);
         }
+
+        // Update top bar for this window
+        this.updateTopBarForApp(title, appMenus);
     }
 
     makeWindowDraggable(windowEl, handle) {
@@ -586,6 +600,12 @@ class NovaOS {
         document.querySelectorAll('.taskbar-app').forEach(app => app.classList.remove('active'));
         const taskbarApp = document.querySelector(`.taskbar-app[data-id="${windowEl.dataset.id}"]`);
         if (taskbarApp) taskbarApp.classList.add('active');
+
+        // Update top bar with app name and menus
+        const windowData = this.windows.get(windowEl.dataset.id);
+        if (windowData) {
+            this.updateTopBarForApp(windowData.title, windowData.appMenus);
+        }
     }
 
     minimizeWindow(windowEl) {
@@ -616,11 +636,124 @@ class NovaOS {
         document.querySelectorAll('.dock-item').forEach(item => {
             const appName = item.dataset.app;
             if (appName) {
-                item.addEventListener('click', () => {
-                    this.openApp(appName);
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+
+                    // Special handling for launchpad
+                    if (appName === 'launchpad') {
+                        this.toggleLaunchpad();
+                        return;
+                    }
+
+                    // If window ref exists and window is open, toggle minimize
+                    if (item._windowRef && !item._windowRef.classList.contains('closing')) {
+                        const win = item._windowRef;
+                        if (win.classList.contains('minimized')) {
+                            win.classList.remove('minimized');
+                            this.focusWindow(win);
+                        } else if (win.style.zIndex == this.windowZIndex - 1) {
+                            this.minimizeWindow(win);
+                        } else {
+                            this.focusWindow(win);
+                        }
+                    } else {
+                        // Otherwise open new window
+                        this.openApp(appName);
+                    }
                 });
             }
         });
+    }
+
+    initLaunchpad() {
+        const launchpad = document.getElementById('launchpad');
+        const launchpadGrid = document.getElementById('launchpad-grid');
+        const searchInput = document.getElementById('launchpad-search-input');
+
+        // Populate launchpad with all apps
+        const allApps = [
+            { id: 'file-explorer', name: 'Files', icon: '<i class="ph ph-folder"></i>' },
+            { id: 'terminal', name: 'Terminal', icon: '<i class="ph ph-terminal-window"></i>' },
+            { id: 'text-editor', name: 'TextEdit', icon: '<i class="ph ph-note-pencil"></i>' },
+            { id: 'calculator', name: 'Calculator', icon: '<i class="ph ph-calculator"></i>' },
+            { id: 'image-viewer', name: 'Images', icon: '<i class="ph ph-image"></i>' },
+            { id: 'file-viewer', name: 'Viewer', icon: '<i class="ph ph-files"></i>' },
+            { id: 'browser', name: 'Browser', icon: '<i class="ph ph-globe"></i>' },
+            { id: 'settings', name: 'Settings', icon: '<i class="ph ph-gear"></i>' }
+        ];
+
+        launchpadGrid.innerHTML = allApps.map(app => `
+            <div class="launchpad-app" data-app="${app.id}">
+                <div class="launchpad-app-icon">${app.icon}</div>
+                <div class="launchpad-app-name">${app.name}</div>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        launchpadGrid.querySelectorAll('.launchpad-app').forEach(app => {
+            app.addEventListener('click', () => {
+                this.openApp(app.dataset.app);
+                this.toggleLaunchpad();
+            });
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            launchpadGrid.querySelectorAll('.launchpad-app').forEach(app => {
+                const name = app.querySelector('.launchpad-app-name').textContent.toLowerCase();
+                app.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        });
+
+        // Close on background click
+        launchpad.addEventListener('click', (e) => {
+            if (e.target.classList.contains('launchpad-background') || e.target.id === 'launchpad') {
+                this.toggleLaunchpad();
+            }
+        });
+
+        // Keyboard shortcut - F4 or Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F4' && !launchpad.classList.contains('hidden')) {
+                this.toggleLaunchpad();
+            } else if (e.key === 'F4') {
+                this.toggleLaunchpad();
+            } else if (e.key === 'Escape' && !launchpad.classList.contains('hidden')) {
+                this.toggleLaunchpad();
+            }
+        });
+    }
+
+    toggleLaunchpad() {
+        const launchpad = document.getElementById('launchpad');
+        const searchInput = document.getElementById('launchpad-search-input');
+
+        launchpad.classList.toggle('hidden');
+
+        if (!launchpad.classList.contains('hidden')) {
+            searchInput.value = '';
+            searchInput.focus();
+            // Reset search
+            document.querySelectorAll('.launchpad-app').forEach(app => {
+                app.style.display = 'flex';
+            });
+        }
+    }
+
+    initTopBarMenus() {
+        this.currentAppMenus = null;
+        this.updateTopBarForApp('NovaOS', null);
+    }
+
+    updateTopBarForApp(appName, appMenus) {
+        const appMenuTitle = document.getElementById('app-menu-title');
+        if (appMenuTitle) {
+            appMenuTitle.textContent = appName;
+        }
+
+        this.currentAppMenus = appMenus;
+        // TODO: Update menu items dynamically
     }
 
     addToDock(id, title, icon, windowEl) {
@@ -628,17 +761,8 @@ class NovaOS {
         const dockItem = document.querySelector(`.dock-item[data-app="${id}"]`);
         if (dockItem) {
             dockItem.classList.add('running');
-
-            dockItem.addEventListener('click', () => {
-                if (windowEl.classList.contains('minimized')) {
-                    windowEl.classList.remove('minimized');
-                    this.focusWindow(windowEl);
-                } else if (windowEl.style.zIndex == this.windowZIndex - 1) {
-                    this.minimizeWindow(windowEl);
-                } else {
-                    this.focusWindow(windowEl);
-                }
-            });
+            // Store reference to window for click handler
+            dockItem._windowRef = windowEl;
         } else {
             // For apps not in the permanent dock, add to running apps section
             const runningApps = document.getElementById('dock-running-apps');
@@ -647,15 +771,18 @@ class NovaOS {
                 appEl.className = 'dock-item running';
                 appEl.dataset.id = id;
                 appEl.innerHTML = icon;
+                appEl._windowRef = windowEl;
 
-                appEl.addEventListener('click', () => {
-                    if (windowEl.classList.contains('minimized')) {
-                        windowEl.classList.remove('minimized');
-                        this.focusWindow(windowEl);
-                    } else if (windowEl.style.zIndex == this.windowZIndex - 1) {
-                        this.minimizeWindow(windowEl);
+                appEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const win = appEl._windowRef;
+                    if (win.classList.contains('minimized')) {
+                        win.classList.remove('minimized');
+                        this.focusWindow(win);
+                    } else if (win.style.zIndex == this.windowZIndex - 1) {
+                        this.minimizeWindow(win);
                     } else {
-                        this.focusWindow(windowEl);
+                        this.focusWindow(win);
                     }
                 });
 
@@ -669,6 +796,7 @@ class NovaOS {
         const dockItem = document.querySelector(`.dock-item[data-app="${id}"]`);
         if (dockItem) {
             dockItem.classList.remove('running');
+            dockItem._windowRef = null;
         }
 
         // Remove from running apps section if present

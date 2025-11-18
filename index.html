@@ -128,6 +128,18 @@
         <!-- Windows Container -->
         <div id="windows-container"></div>
 
+        <!-- Launchpad -->
+        <div class="launchpad hidden" id="launchpad">
+            <div class="launchpad-background"></div>
+            <div class="launchpad-search">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="text" placeholder="Search" id="launchpad-search-input">
+            </div>
+            <div class="launchpad-grid" id="launchpad-grid">
+                <!-- Apps will be dynamically added here -->
+            </div>
+        </div>
+
         <!-- macOS Dock -->
         <div class="dock" id="dock">
             <div class="dock-apps">
@@ -199,6 +211,26 @@
                     </svg>
                 </div>
                 <div class="dock-separator"></div>
+                <div class="dock-item" data-app="launchpad" id="launchpad-button" title="Launchpad">
+                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="launchpad-gradient" x1="0" y1="0" x2="64" y2="64">
+                                <stop offset="0%" style="stop-color:#A0A0A0"/>
+                                <stop offset="100%" style="stop-color:#707070"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="8" y="8" width="48" height="48" rx="12" fill="url(#launchpad-gradient)"/>
+                        <circle cx="20" cy="20" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="32" cy="20" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="44" cy="20" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="20" cy="32" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="32" cy="32" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="44" cy="32" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="20" cy="44" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="32" cy="44" r="4" fill="white" opacity="0.9"/>
+                        <circle cx="44" cy="44" r="4" fill="white" opacity="0.9"/>
+                    </svg>
+                </div>
                 <div class="dock-item" data-app="settings" title="Settings">
                     <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="32" cy="32" r="28" fill="url(#settings-gradient-dock)"/>
