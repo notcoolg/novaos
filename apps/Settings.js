@@ -11,7 +11,8 @@ class Settings {
             font: 'system',
             animations: true,
             blur: true,
-            wallpaper: 'default'
+            wallpaper: 'default',
+            accentColor: 'blue'
         };
 
         const saved = localStorage.getItem('novaos_settings');
@@ -57,6 +58,21 @@ class Settings {
                                 <option value="dark" ${this.settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
                                 <option value="light" ${this.settings.theme === 'light' ? 'selected' : ''}>Light</option>
                                 <option value="auto" ${this.settings.theme === 'auto' ? 'selected' : ''}>Auto (System)</option>
+                            </select>
+                        </div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Accent Color</div>
+                                <div class="settings-option-description">Choose your preferred accent color</div>
+                            </div>
+                            <select class="settings-select" id="accent-select">
+                                <option value="blue" ${this.settings.accentColor === 'blue' ? 'selected' : ''}>Blue</option>
+                                <option value="purple" ${this.settings.accentColor === 'purple' ? 'selected' : ''}>Purple</option>
+                                <option value="pink" ${this.settings.accentColor === 'pink' ? 'selected' : ''}>Pink</option>
+                                <option value="red" ${this.settings.accentColor === 'red' ? 'selected' : ''}>Red</option>
+                                <option value="orange" ${this.settings.accentColor === 'orange' ? 'selected' : ''}>Orange</option>
+                                <option value="green" ${this.settings.accentColor === 'green' ? 'selected' : ''}>Green</option>
+                                <option value="teal" ${this.settings.accentColor === 'teal' ? 'selected' : ''}>Teal</option>
                             </select>
                         </div>
                     </div>
@@ -114,10 +130,17 @@ class Settings {
                                 <div class="settings-option-description">Choose desktop wallpaper style</div>
                             </div>
                             <select class="settings-select" id="wallpaper-select">
-                                <option value="default" ${this.settings.wallpaper === 'default' ? 'selected' : ''}>Default Gradient</option>
-                                <option value="purple" ${this.settings.wallpaper === 'purple' ? 'selected' : ''}>Purple Wave</option>
-                                <option value="blue" ${this.settings.wallpaper === 'blue' ? 'selected' : ''}>Ocean Blue</option>
-                                <option value="sunset" ${this.settings.wallpaper === 'sunset' ? 'selected' : ''}>Sunset</option>
+                                <option value="default" ${this.settings.wallpaper === 'default' ? 'selected' : ''}>Purple Wave</option>
+                                <option value="neon" ${this.settings.wallpaper === 'neon' ? 'selected' : ''}>Neon Lights</option>
+                                <option value="aurora" ${this.settings.wallpaper === 'aurora' ? 'selected' : ''}>Aurora Borealis</option>
+                                <option value="sunset" ${this.settings.wallpaper === 'sunset' ? 'selected' : ''}>Miami Sunset</option>
+                                <option value="ocean" ${this.settings.wallpaper === 'ocean' ? 'selected' : ''}>Deep Ocean</option>
+                                <option value="forest" ${this.settings.wallpaper === 'forest' ? 'selected' : ''}>Emerald Forest</option>
+                                <option value="fire" ${this.settings.wallpaper === 'fire' ? 'selected' : ''}>Fire & Ice</option>
+                                <option value="cyberpunk" ${this.settings.wallpaper === 'cyberpunk' ? 'selected' : ''}>Cyberpunk</option>
+                                <option value="galaxy" ${this.settings.wallpaper === 'galaxy' ? 'selected' : ''}>Galaxy</option>
+                                <option value="minimal-dark" ${this.settings.wallpaper === 'minimal-dark' ? 'selected' : ''}>Minimal Dark</option>
+                                <option value="minimal-light" ${this.settings.wallpaper === 'minimal-light' ? 'selected' : ''}>Minimal Light</option>
                             </select>
                         </div>
                     </div>
@@ -129,7 +152,7 @@ class Settings {
                         <div class="settings-section-title">System Information</div>
                         <div class="settings-option">
                             <div class="settings-option-label">Operating System</div>
-                            <div class="setting-value">NovaOS 25U11.1</div>
+                            <div class="setting-value">NovaOS 25U11.2</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Current User</div>
@@ -151,11 +174,15 @@ class Settings {
                         <div class="settings-section-title">About</div>
                         <div class="settings-option">
                             <div class="settings-option-label">Version</div>
-                            <div class="setting-value">25U11.1</div>
+                            <div class="setting-value">25U11.2</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Build Date</div>
                             <div class="setting-value">2025-11-18</div>
+                        </div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Release Notes</div>
+                            <div class="setting-value">macOS UI Update</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Codename</div>
@@ -282,12 +309,23 @@ class Settings {
             });
         }
 
+        // Accent color selector
+        const accentSelect = windowEl.querySelector('#accent-select');
+        if (accentSelect) {
+            accentSelect.addEventListener('change', (e) => {
+                this.settings.accentColor = e.target.value;
+                this.saveSettings();
+                this.applyAccentColor();
+            });
+        }
+
         // Apply settings on init
         this.applyTheme();
         this.applyFont();
         this.applyAnimations();
         this.applyBlur();
         this.applyWallpaper();
+        this.applyAccentColor();
     }
 
     applyTheme() {
@@ -344,13 +382,35 @@ class Settings {
         if (!desktop) return;
 
         const wallpapers = {
-            default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            purple: 'linear-gradient(to bottom, #8e44ad 0%, #3498db 100%)',
-            blue: 'linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%)',
-            sunset: 'linear-gradient(to right, #fa709a 0%, #fee140 100%)'
+            'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'neon': 'linear-gradient(45deg, #ff0080 0%, #ff8c00 30%, #40e0d0 60%, #9d00ff 100%)',
+            'aurora': 'linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+            'sunset': 'linear-gradient(135deg, #fa709a 0%, #fee140 50%, #30cfd0 100%)',
+            'ocean': 'linear-gradient(180deg, #000428 0%, #004e92 50%, #1a7fa0 100%)',
+            'forest': 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+            'fire': 'linear-gradient(135deg, #f12711 0%, #f5af19 50%, #00d2ff 100%)',
+            'cyberpunk': 'linear-gradient(135deg, #ff006e 0%, #8338ec 33%, #3a86ff 66%, #06ffa5 100%)',
+            'galaxy': 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%), linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'minimal-dark': 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+            'minimal-light': 'linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%)'
         };
 
         desktop.style.background = wallpapers[this.settings.wallpaper] || wallpapers.default;
+    }
+
+    applyAccentColor() {
+        const accentColors = {
+            blue: '#007AFF',
+            purple: '#5856D6',
+            pink: '#FF2D55',
+            red: '#FF3B30',
+            orange: '#FF9500',
+            green: '#34C759',
+            teal: '#5AC8FA'
+        };
+
+        const color = accentColors[this.settings.accentColor] || accentColors.blue;
+        document.documentElement.style.setProperty('--primary-color', color);
     }
 
     async loadChangelog(windowEl) {
