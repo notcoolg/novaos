@@ -2,12 +2,30 @@
 class Settings {
     constructor(os) {
         this.os = os;
+        this.settings = this.loadSettings();
+    }
+
+    loadSettings() {
+        const defaults = {
+            theme: 'dark',
+            font: 'system',
+            animations: true,
+            blur: true,
+            wallpaper: 'default'
+        };
+
+        const saved = localStorage.getItem('novaos_settings');
+        return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+    }
+
+    saveSettings() {
+        localStorage.setItem('novaos_settings', JSON.stringify(this.settings));
     }
 
     getAppInfo() {
         return {
             title: 'Settings',
-            icon: '⚙️',
+            icon: '<i class="ph ph-gear"></i>',
             content: this.createContent()
         };
     }
@@ -19,49 +37,137 @@ class Settings {
 
         return `
             <div class="settings-tabs">
-                <div class="settings-tab active" data-tab="general">General</div>
-                <div class="settings-tab" data-tab="keyboard">Keyboard Shortcuts</div>
-                <div class="settings-tab" data-tab="changelog">Changelog</div>
+                <div class="settings-tab active" data-tab="appearance"><i class="ph ph-palette"></i> Appearance</div>
+                <div class="settings-tab" data-tab="preferences"><i class="ph ph-sliders"></i> Preferences</div>
+                <div class="settings-tab" data-tab="system"><i class="ph ph-info"></i> System</div>
+                <div class="settings-tab" data-tab="keyboard"><i class="ph ph-keyboard"></i> Shortcuts</div>
+                <div class="settings-tab" data-tab="changelog"><i class="ph ph-clock-counter-clockwise"></i> Changelog</div>
             </div>
             <div class="settings-content">
-                <div class="settings-tab-content active" data-content="general">
+                <!-- Appearance Tab -->
+                <div class="settings-tab-content active" data-content="appearance">
                     <div class="settings-section">
-                        <h3>System Information</h3>
-                        <div class="setting-item">
-                            <div class="setting-label">Operating System</div>
-                            <div class="setting-value">NovaOS 25U11</div>
+                        <div class="settings-section-title">Theme</div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Color Scheme</div>
+                                <div class="settings-option-description">Choose your preferred color scheme</div>
+                            </div>
+                            <select class="settings-select" id="theme-select">
+                                <option value="dark" ${this.settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                                <option value="light" ${this.settings.theme === 'light' ? 'selected' : ''}>Light</option>
+                                <option value="auto" ${this.settings.theme === 'auto' ? 'selected' : ''}>Auto (System)</option>
+                            </select>
                         </div>
-                        <div class="setting-item">
-                            <div class="setting-label">Current User</div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-title">Font Family</div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">System Font</div>
+                                <div class="settings-option-description">Choose your preferred font</div>
+                            </div>
+                            <select class="settings-select" id="font-select">
+                                <option value="system" ${this.settings.font === 'system' ? 'selected' : ''}>SF Pro (System)</option>
+                                <option value="inter" ${this.settings.font === 'inter' ? 'selected' : ''}>Inter</option>
+                                <option value="roboto" ${this.settings.font === 'roboto' ? 'selected' : ''}>Roboto</option>
+                                <option value="mono" ${this.settings.font === 'mono' ? 'selected' : ''}>SF Mono</option>
+                            </select>
+                        </div>
+                        <div class="font-preview" id="font-preview">
+                            The quick brown fox jumps over the lazy dog.
+                            <br>0123456789 !@#$%^&*()
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Tab -->
+                <div class="settings-tab-content" data-content="preferences">
+                    <div class="settings-section">
+                        <div class="settings-section-title">Visual Effects</div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Animations</div>
+                                <div class="settings-option-description">Enable window animations and transitions</div>
+                            </div>
+                            <div class="settings-toggle ${this.settings.animations ? 'active' : ''}" id="animations-toggle">
+                                <div class="settings-toggle-slider"></div>
+                            </div>
+                        </div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Blur Effects</div>
+                                <div class="settings-option-description">Enable glassmorphism blur effects</div>
+                            </div>
+                            <div class="settings-toggle ${this.settings.blur ? 'active' : ''}" id="blur-toggle">
+                                <div class="settings-toggle-slider"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-title">Desktop</div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Wallpaper</div>
+                                <div class="settings-option-description">Choose desktop wallpaper style</div>
+                            </div>
+                            <select class="settings-select" id="wallpaper-select">
+                                <option value="default" ${this.settings.wallpaper === 'default' ? 'selected' : ''}>Default Gradient</option>
+                                <option value="purple" ${this.settings.wallpaper === 'purple' ? 'selected' : ''}>Purple Wave</option>
+                                <option value="blue" ${this.settings.wallpaper === 'blue' ? 'selected' : ''}>Ocean Blue</option>
+                                <option value="sunset" ${this.settings.wallpaper === 'sunset' ? 'selected' : ''}>Sunset</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Tab -->
+                <div class="settings-tab-content" data-content="system">
+                    <div class="settings-section">
+                        <div class="settings-section-title">System Information</div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Operating System</div>
+                            <div class="setting-value">NovaOS 25U11.1</div>
+                        </div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Current User</div>
                             <div class="setting-value">${this.os.currentUser}</div>
                         </div>
-                        <div class="setting-item">
-                            <div class="setting-label">Total Users</div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Total Users</div>
                             <div class="setting-value">${userCount}</div>
                         </div>
                     </div>
                     <div class="settings-section">
-                        <h3>Storage</h3>
-                        <div class="setting-item">
-                            <div class="setting-label">File System Size</div>
+                        <div class="settings-section-title">Storage</div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">File System Size</div>
                             <div class="setting-value">${(fsSize / 1024).toFixed(2)} KB</div>
                         </div>
                     </div>
                     <div class="settings-section">
-                        <h3>About</h3>
-                        <div class="setting-item">
-                            <div class="setting-label">Version</div>
-                            <div class="setting-value">25U11</div>
+                        <div class="settings-section-title">About</div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Version</div>
+                            <div class="setting-value">25U11.1</div>
                         </div>
-                        <div class="setting-item">
-                            <div class="setting-label">Build</div>
-                            <div class="setting-value">2025.11.17</div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Build Date</div>
+                            <div class="setting-value">2025-11-18</div>
+                        </div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Codename</div>
+                            <div class="setting-value">Nova</div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Keyboard Tab -->
                 <div class="settings-tab-content" data-content="keyboard">
                     <div class="settings-section">
-                        <h3>Keyboard Shortcuts</h3>
+                        <div class="settings-section-title">Keyboard Shortcuts</div>
                         <div class="shortcuts-list">
                             <div class="shortcut-item">
                                 <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>W</kbd></span>
@@ -90,6 +196,8 @@ class Settings {
                         </div>
                     </div>
                 </div>
+
+                <!-- Changelog Tab -->
                 <div class="settings-tab-content" data-content="changelog">
                     <div id="changelog-viewer" class="changelog-viewer">Loading changelog...</div>
                 </div>
@@ -106,21 +214,143 @@ class Settings {
             tab.addEventListener('click', () => {
                 const tabName = tab.dataset.tab;
 
-                // Update active tab
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
 
-                // Update active content
                 contents.forEach(c => c.classList.remove('active'));
                 const content = windowEl.querySelector(`[data-content="${tabName}"]`);
                 if (content) content.classList.add('active');
 
-                // Load changelog if changelog tab
                 if (tabName === 'changelog') {
                     this.loadChangelog(windowEl);
                 }
             });
         });
+
+        // Theme selector
+        const themeSelect = windowEl.querySelector('#theme-select');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', (e) => {
+                this.settings.theme = e.target.value;
+                this.saveSettings();
+                this.applyTheme();
+            });
+        }
+
+        // Font selector
+        const fontSelect = windowEl.querySelector('#font-select');
+        const fontPreview = windowEl.querySelector('#font-preview');
+        if (fontSelect) {
+            fontSelect.addEventListener('change', (e) => {
+                this.settings.font = e.target.value;
+                this.saveSettings();
+                this.applyFont();
+                this.updateFontPreview(fontPreview);
+            });
+            this.updateFontPreview(fontPreview);
+        }
+
+        // Animations toggle
+        const animationsToggle = windowEl.querySelector('#animations-toggle');
+        if (animationsToggle) {
+            animationsToggle.addEventListener('click', () => {
+                this.settings.animations = !this.settings.animations;
+                animationsToggle.classList.toggle('active');
+                this.saveSettings();
+                this.applyAnimations();
+            });
+        }
+
+        // Blur toggle
+        const blurToggle = windowEl.querySelector('#blur-toggle');
+        if (blurToggle) {
+            blurToggle.addEventListener('click', () => {
+                this.settings.blur = !this.settings.blur;
+                blurToggle.classList.toggle('active');
+                this.saveSettings();
+                this.applyBlur();
+            });
+        }
+
+        // Wallpaper selector
+        const wallpaperSelect = windowEl.querySelector('#wallpaper-select');
+        if (wallpaperSelect) {
+            wallpaperSelect.addEventListener('change', (e) => {
+                this.settings.wallpaper = e.target.value;
+                this.saveSettings();
+                this.applyWallpaper();
+            });
+        }
+
+        // Apply settings on init
+        this.applyTheme();
+        this.applyFont();
+        this.applyAnimations();
+        this.applyBlur();
+        this.applyWallpaper();
+    }
+
+    applyTheme() {
+        if (this.settings.theme === 'light') {
+            document.body.setAttribute('data-theme', 'light');
+        } else if (this.settings.theme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        } else {
+            // Auto - use system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        }
+    }
+
+    applyFont() {
+        const fonts = {
+            system: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif',
+            inter: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+            roboto: '"Roboto", -apple-system, BlinkMacSystemFont, sans-serif',
+            mono: '"SF Mono", Monaco, "Courier New", monospace'
+        };
+        document.body.style.fontFamily = fonts[this.settings.font] || fonts.system;
+    }
+
+    updateFontPreview(preview) {
+        if (!preview) return;
+        const fonts = {
+            system: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif',
+            inter: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+            roboto: '"Roboto", -apple-system, BlinkMacSystemFont, sans-serif',
+            mono: '"SF Mono", Monaco, "Courier New", monospace'
+        };
+        preview.style.fontFamily = fonts[this.settings.font] || fonts.system;
+    }
+
+    applyAnimations() {
+        if (this.settings.animations) {
+            document.body.classList.remove('no-animations');
+        } else {
+            document.body.classList.add('no-animations');
+        }
+    }
+
+    applyBlur() {
+        if (this.settings.blur) {
+            document.body.classList.remove('no-blur');
+        } else {
+            document.body.classList.add('no-blur');
+        }
+    }
+
+    applyWallpaper() {
+        const desktop = document.querySelector('.desktop-background');
+        if (!desktop) return;
+
+        const wallpapers = {
+            default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            purple: 'linear-gradient(to bottom, #8e44ad 0%, #3498db 100%)',
+            blue: 'linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%)',
+            sunset: 'linear-gradient(to right, #fa709a 0%, #fee140 100%)'
+        };
+
+        desktop.style.background = wallpapers[this.settings.wallpaper] || wallpapers.default;
     }
 
     async loadChangelog(windowEl) {
@@ -137,28 +367,49 @@ class Settings {
     }
 
     parseMarkdown(md) {
-        // Simple markdown parser
-        let html = md
-            // Headers
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            // Bold
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-            // Lists
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
-            // Links
-            .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
-            // Line breaks
-            .replace(/\n\n/g, '</p><p>')
-            .replace(/\n/g, '<br>');
+        let html = md;
 
-        // Wrap in paragraphs
-        html = '<p>' + html + '</p>';
+        // Parse headers
+        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
 
-        // Fix list items
-        html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
-        html = html.replace(/<\/ul><br><ul>/g, '');
+        // Parse bold
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+        // Parse links
+        html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+        // Parse lists
+        const lines = html.split('\n');
+        let inList = false;
+        let result = [];
+
+        for (let line of lines) {
+            if (line.match(/^- /)) {
+                if (!inList) {
+                    result.push('<ul>');
+                    inList = true;
+                }
+                result.push('<li>' + line.substring(2) + '</li>');
+            } else {
+                if (inList) {
+                    result.push('</ul>');
+                    inList = false;
+                }
+                result.push(line);
+            }
+        }
+
+        if (inList) {
+            result.push('</ul>');
+        }
+
+        html = result.join('\n');
+
+        // Parse paragraphs
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = '<div>' + html + '</div>';
 
         return html;
     }

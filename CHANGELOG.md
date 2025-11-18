@@ -5,6 +5,54 @@ All notable changes to NovaOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [25U11.1] - 2025-11-18
+
+### Added
+- **Phosphor Icons Integration**: Professional icon library replacing all emoji icons throughout the system
+- **New Applications**:
+  - **Image Viewer**: View and manipulate images with zoom, pan, and rotation features
+  - **Universal File Viewer (UFV)**: Support for viewing PDFs, videos (MP4, WebM), audio (MP3, WAV, OGG), and text files
+  - **Mini Web Browser**: Browse websites with navigation controls and address bar
+- **Window Management**: 5-window limit to conserve system resources with user-friendly notification system
+- **Notification System**: Toast-style notifications for system alerts and warnings
+- **Comprehensive Settings App**:
+  - **Appearance Tab**: Theme selection (Dark, Light, Auto), Font selection (4 options with live preview)
+  - **Preferences Tab**: Toggle animations, blur effects, and wallpaper selection (4 options)
+  - **System Tab**: Detailed system information and storage stats
+  - **Keyboard Shortcuts Tab**: Complete reference guide
+  - **Changelog Tab**: Integrated markdown viewer
+- **Desktop Enhancements**:
+  - Draggable desktop icons with position persistence
+  - Right-click context menu with system actions
+  - Multiple wallpaper options
+  - Functional desktop interactions
+- **File System Integration**: Upload and view local files from user's computer
+- **Theme System**: Dark mode, Light mode, and Auto (system preference) with full color scheme switching
+- **Font System**: 4 professional fonts (SF Pro, Inter, Roboto, SF Mono) with system-wide application
+- **localStorage Persistence**: All user preferences saved and restored across sessions
+
+### Changed
+- Updated Settings app with tabbed interface and comprehensive options
+- Improved markdown parser for better changelog rendering
+- Enhanced notification system with auto-dismiss and animations
+- Desktop icons now use modern Phosphor Icons instead of emojis
+- Start menu updated with new app entries and Phosphor Icons
+
+### Improved
+- Better user experience with window limit notifications
+- Smoother desktop icon dragging
+- More intuitive context menu actions
+- Enhanced visual consistency across all UI elements
+- Better organization of settings into logical categories
+
+### Technical
+- Modular app architecture with new ImageViewer, FileViewer, and Browser classes
+- Notification container system with auto-cleanup
+- Desktop dragging implementation with proper z-index management
+- Context menu system with event delegation
+- Settings persistence layer with localStorage integration
+- Theme application system with CSS custom properties
+
 ## [25U11] - 2025-11-17
 
 ### Added
