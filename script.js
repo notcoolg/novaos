@@ -302,11 +302,11 @@ class NovaOS {
         // Create notification container
         this.createNotificationContainer();
 
-        // Initialize desktop dragging
-        this.initDesktopDragging();
-
         // Initialize context menu
         this.initContextMenu();
+
+        // Initialize user menu
+        this.initUserMenu();
 
         // Initialize dock
         this.initDock();
@@ -323,13 +323,6 @@ class NovaOS {
         if (startButton) {
             startButton.addEventListener('click', () => this.toggleStartMenu());
         }
-
-        document.querySelectorAll('.desktop-icon').forEach(icon => {
-            icon.addEventListener('dblclick', (e) => {
-                const appName = e.currentTarget.dataset.app;
-                this.openApp(appName);
-            });
-        });
 
         document.querySelectorAll('.start-menu-item:not(.power)').forEach(item => {
             item.addEventListener('click', (e) => {
@@ -754,39 +747,95 @@ class NovaOS {
         }, 4000);
     }
 
-    initDesktopDragging() {
-        let draggedIcon = null;
-        let offsetX = 0;
-        let offsetY = 0;
+    initUserMenu() {
+        const userIcon = document.getElementById('user-menu-icon');
+        if (!userIcon) return;
 
-        document.querySelectorAll('.desktop-icon').forEach(icon => {
-            icon.addEventListener('mousedown', (e) => {
-                if (e.detail === 1) { // Single click (not double)
-                    draggedIcon = icon;
-                    const rect = icon.getBoundingClientRect();
-                    offsetX = e.clientX - rect.left;
-                    offsetY = e.clientY - rect.top;
-                    icon.classList.add('dragging');
-                    icon.style.position = 'absolute';
-                    icon.style.zIndex = '1000';
+        // Create user menu
+        const userMenu = document.createElement('div');
+        userMenu.className = 'user-menu hidden';
+        userMenu.innerHTML = `
+            <div class="user-menu-header">
+                <div class="user-menu-avatar">
+                    <i class="ph ph-user-circle"></i>
+                </div>
+                <div class="user-menu-info">
+                    <div class="user-menu-name" id="user-menu-name">${this.currentUser}</div>
+                    <div class="user-menu-subtitle">NovaOS User</div>
+                </div>
+            </div>
+            <div class="user-menu-divider"></div>
+            <div class="user-menu-items">
+                <div class="user-menu-item" data-action="profile">
+                    <i class="ph ph-user"></i>
+                    <span>Profile Settings</span>
+                </div>
+                <div class="user-menu-item" data-action="preferences">
+                    <i class="ph ph-gear"></i>
+                    <span>System Preferences</span>
+                </div>
+                <div class="user-menu-item" data-action="appearance">
+                    <i class="ph ph-palette"></i>
+                    <span>Appearance</span>
+                </div>
+            </div>
+            <div class="user-menu-divider"></div>
+            <div class="user-menu-items">
+                <div class="user-menu-item" data-action="lock">
+                    <i class="ph ph-lock"></i>
+                    <span>Lock Screen</span>
+                </div>
+                <div class="user-menu-item" data-action="logout">
+                    <i class="ph ph-sign-out"></i>
+                    <span>Log Out</span>
+                </div>
+                <div class="user-menu-item danger" data-action="shutdown">
+                    <i class="ph ph-power"></i>
+                    <span>Shut Down</span>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(userMenu);
+
+        // Toggle user menu
+        userIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rect = userIcon.getBoundingClientRect();
+            userMenu.style.top = `${rect.bottom + 8}px`;
+            userMenu.style.right = `${window.innerWidth - rect.right}px`;
+            userMenu.classList.toggle('hidden');
+        });
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenu.contains(e.target) && !userIcon.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Handle user menu actions
+        userMenu.querySelectorAll('.user-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                userMenu.classList.add('hidden');
+
+                switch(action) {
+                    case 'profile':
+                    case 'preferences':
+                    case 'appearance':
+                        this.openApp('settings');
+                        break;
+                    case 'lock':
+                        this.showNotification('Lock Screen', 'Screen lock feature coming soon!', 'info');
+                        break;
+                    case 'logout':
+                        this.logout();
+                        break;
+                    case 'shutdown':
+                        this.shutdown();
+                        break;
                 }
             });
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (draggedIcon) {
-                const x = e.clientX - offsetX;
-                const y = e.clientY - offsetY;
-                draggedIcon.style.left = `${x}px`;
-                draggedIcon.style.top = `${y}px`;
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (draggedIcon) {
-                draggedIcon.classList.remove('dragging');
-                draggedIcon = null;
-            }
         });
     }
 
@@ -795,18 +844,60 @@ class NovaOS {
         const contextMenu = document.createElement('div');
         contextMenu.className = 'context-menu';
         contextMenu.innerHTML = `
-            <div class="context-menu-item" data-action="refresh">
-                <i class="ph ph-arrow-clockwise"></i>
-                Refresh Desktop
+            <div class="context-menu-section">
+                <div class="context-menu-title">Applications</div>
+                <div class="context-menu-item" data-action="new-file-explorer">
+                    <i class="ph ph-folder"></i>
+                    <div class="context-menu-item-content">
+                        <span>New File Explorer</span>
+                        <kbd class="context-menu-shortcut">⌘N</kbd>
+                    </div>
+                </div>
+                <div class="context-menu-item" data-action="new-terminal">
+                    <i class="ph ph-terminal-window"></i>
+                    <div class="context-menu-item-content">
+                        <span>New Terminal</span>
+                        <kbd class="context-menu-shortcut">⌘T</kbd>
+                    </div>
+                </div>
+                <div class="context-menu-item" data-action="browser">
+                    <i class="ph ph-globe"></i>
+                    <div class="context-menu-item-content">
+                        <span>Open Browser</span>
+                    </div>
+                </div>
             </div>
             <div class="context-menu-separator"></div>
-            <div class="context-menu-item" data-action="settings">
-                <i class="ph ph-gear"></i>
-                Settings
+            <div class="context-menu-section">
+                <div class="context-menu-title">View</div>
+                <div class="context-menu-item" data-action="wallpaper">
+                    <i class="ph ph-image"></i>
+                    <div class="context-menu-item-content">
+                        <span>Change Wallpaper</span>
+                    </div>
+                </div>
+                <div class="context-menu-item" data-action="refresh">
+                    <i class="ph ph-arrow-clockwise"></i>
+                    <div class="context-menu-item-content">
+                        <span>Refresh</span>
+                    </div>
+                </div>
             </div>
-            <div class="context-menu-item" data-action="about">
-                <i class="ph ph-info"></i>
-                About NovaOS
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-section">
+                <div class="context-menu-item" data-action="settings">
+                    <i class="ph ph-gear"></i>
+                    <div class="context-menu-item-content">
+                        <span>System Preferences</span>
+                        <kbd class="context-menu-shortcut">⌘,</kbd>
+                    </div>
+                </div>
+                <div class="context-menu-item" data-action="about">
+                    <i class="ph ph-info"></i>
+                    <div class="context-menu-item-content">
+                        <span>About NovaOS</span>
+                    </div>
+                </div>
             </div>
         `;
         document.body.appendChild(contextMenu);
@@ -831,18 +922,35 @@ class NovaOS {
         contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
             item.addEventListener('click', () => {
                 const action = item.dataset.action;
-                if (action === 'refresh') {
-                    location.reload();
-                } else if (action === 'settings') {
-                    this.openApp('settings');
-                } else if (action === 'about') {
-                    this.showNotification(
-                        'NovaOS 25U11.2',
-                        'A modern web-based operating system with macOS-style UI. Built with vanilla JavaScript.',
-                        'info'
-                    );
-                }
                 contextMenu.classList.remove('active');
+
+                switch(action) {
+                    case 'new-file-explorer':
+                        this.openApp('file-explorer');
+                        break;
+                    case 'new-terminal':
+                        this.openApp('terminal');
+                        break;
+                    case 'browser':
+                        this.openApp('browser');
+                        break;
+                    case 'wallpaper':
+                        this.openApp('settings');
+                        break;
+                    case 'refresh':
+                        location.reload();
+                        break;
+                    case 'settings':
+                        this.openApp('settings');
+                        break;
+                    case 'about':
+                        this.showNotification(
+                            'NovaOS 25U11.2',
+                            'A modern web-based operating system with macOS-style UI. Built with vanilla JavaScript.',
+                            'info'
+                        );
+                        break;
+                }
             });
         });
     }

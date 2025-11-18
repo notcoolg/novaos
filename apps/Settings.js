@@ -130,10 +130,17 @@ class Settings {
                                 <div class="settings-option-description">Choose desktop wallpaper style</div>
                             </div>
                             <select class="settings-select" id="wallpaper-select">
-                                <option value="default" ${this.settings.wallpaper === 'default' ? 'selected' : ''}>Default Gradient</option>
-                                <option value="purple" ${this.settings.wallpaper === 'purple' ? 'selected' : ''}>Purple Wave</option>
-                                <option value="blue" ${this.settings.wallpaper === 'blue' ? 'selected' : ''}>Ocean Blue</option>
-                                <option value="sunset" ${this.settings.wallpaper === 'sunset' ? 'selected' : ''}>Sunset</option>
+                                <option value="default" ${this.settings.wallpaper === 'default' ? 'selected' : ''}>Purple Wave</option>
+                                <option value="neon" ${this.settings.wallpaper === 'neon' ? 'selected' : ''}>Neon Lights</option>
+                                <option value="aurora" ${this.settings.wallpaper === 'aurora' ? 'selected' : ''}>Aurora Borealis</option>
+                                <option value="sunset" ${this.settings.wallpaper === 'sunset' ? 'selected' : ''}>Miami Sunset</option>
+                                <option value="ocean" ${this.settings.wallpaper === 'ocean' ? 'selected' : ''}>Deep Ocean</option>
+                                <option value="forest" ${this.settings.wallpaper === 'forest' ? 'selected' : ''}>Emerald Forest</option>
+                                <option value="fire" ${this.settings.wallpaper === 'fire' ? 'selected' : ''}>Fire & Ice</option>
+                                <option value="cyberpunk" ${this.settings.wallpaper === 'cyberpunk' ? 'selected' : ''}>Cyberpunk</option>
+                                <option value="galaxy" ${this.settings.wallpaper === 'galaxy' ? 'selected' : ''}>Galaxy</option>
+                                <option value="minimal-dark" ${this.settings.wallpaper === 'minimal-dark' ? 'selected' : ''}>Minimal Dark</option>
+                                <option value="minimal-light" ${this.settings.wallpaper === 'minimal-light' ? 'selected' : ''}>Minimal Light</option>
                             </select>
                         </div>
                     </div>
@@ -375,10 +382,17 @@ class Settings {
         if (!desktop) return;
 
         const wallpapers = {
-            default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            purple: 'linear-gradient(to bottom, #8e44ad 0%, #3498db 100%)',
-            blue: 'linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%)',
-            sunset: 'linear-gradient(to right, #fa709a 0%, #fee140 100%)'
+            'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'neon': 'linear-gradient(45deg, #ff0080 0%, #ff8c00 30%, #40e0d0 60%, #9d00ff 100%)',
+            'aurora': 'linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+            'sunset': 'linear-gradient(135deg, #fa709a 0%, #fee140 50%, #30cfd0 100%)',
+            'ocean': 'linear-gradient(180deg, #000428 0%, #004e92 50%, #1a7fa0 100%)',
+            'forest': 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+            'fire': 'linear-gradient(135deg, #f12711 0%, #f5af19 50%, #00d2ff 100%)',
+            'cyberpunk': 'linear-gradient(135deg, #ff006e 0%, #8338ec 33%, #3a86ff 66%, #06ffa5 100%)',
+            'galaxy': 'radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%), linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'minimal-dark': 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+            'minimal-light': 'linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%)'
         };
 
         desktop.style.background = wallpapers[this.settings.wallpaper] || wallpapers.default;
