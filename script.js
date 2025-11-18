@@ -308,6 +308,9 @@ class NovaOS {
         // Initialize context menu
         this.initContextMenu();
 
+        // Initialize dock
+        this.initDock();
+
         // Update current user name
         document.getElementById('current-user-name').textContent = this.currentUser;
 
@@ -316,7 +319,10 @@ class NovaOS {
         setInterval(() => this.updateDesktopTime(), 1000);
 
         // Event listeners
-        document.getElementById('start-button').addEventListener('click', () => this.toggleStartMenu());
+        const startButton = document.getElementById('start-button');
+        if (startButton) {
+            startButton.addEventListener('click', () => this.toggleStartMenu());
+        }
 
         document.querySelectorAll('.desktop-icon').forEach(icon => {
             icon.addEventListener('dblclick', (e) => {
@@ -340,7 +346,7 @@ class NovaOS {
         document.addEventListener('click', (e) => {
             const startMenu = document.getElementById('start-menu');
             const startButton = document.getElementById('start-button');
-            if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
+            if (!startMenu.contains(e.target) && (!startButton || !startButton.contains(e.target))) {
                 startMenu.classList.add('hidden');
             }
         });
@@ -348,8 +354,28 @@ class NovaOS {
 
     updateDesktopTime() {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('tray-time').textContent = timeStr;
+        const timeStr = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        const dateStr = now.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
+        });
+
+        // Update top bar time
+        const topBarTime = document.getElementById('top-bar-time');
+        if (topBarTime) {
+            topBarTime.textContent = `${dateStr} ${timeStr}`;
+        }
+
+        // Keep old taskbar time for compatibility
+        const trayTime = document.getElementById('tray-time');
+        if (trayTime) {
+            trayTime.textContent = timeStr;
+        }
     }
 
     toggleStartMenu() {
@@ -583,34 +609,110 @@ class NovaOS {
             windowEl.remove();
             this.windows.delete(id);
 
-            // Remove from taskbar
+            // Remove from dock
+            this.removeFromDock(id);
+
+            // Remove from taskbar (legacy)
             const taskbarApp = document.querySelector(`.taskbar-app[data-id="${id}"]`);
             if (taskbarApp) taskbarApp.remove();
         }, 300);
     }
 
-    addToTaskbar(id, title, icon, windowEl) {
-        const taskbarApps = document.getElementById('taskbar-apps');
-        const appEl = document.createElement('div');
-        appEl.className = 'taskbar-app active';
-        appEl.dataset.id = id;
-        appEl.innerHTML = `
-            <div class="icon">${icon}</div>
-            <div class="label">${title}</div>
-        `;
-
-        appEl.addEventListener('click', () => {
-            if (windowEl.classList.contains('minimized')) {
-                windowEl.classList.remove('minimized');
-                this.focusWindow(windowEl);
-            } else if (windowEl.style.zIndex == this.windowZIndex - 1) {
-                this.minimizeWindow(windowEl);
-            } else {
-                this.focusWindow(windowEl);
+    initDock() {
+        // Add click handlers for dock items
+        document.querySelectorAll('.dock-item').forEach(item => {
+            const appName = item.dataset.app;
+            if (appName) {
+                item.addEventListener('click', () => {
+                    this.openApp(appName);
+                });
             }
         });
+    }
 
-        taskbarApps.appendChild(appEl);
+    addToDock(id, title, icon, windowEl) {
+        // Mark the dock item as running
+        const dockItem = document.querySelector(`.dock-item[data-app="${id}"]`);
+        if (dockItem) {
+            dockItem.classList.add('running');
+
+            dockItem.addEventListener('click', () => {
+                if (windowEl.classList.contains('minimized')) {
+                    windowEl.classList.remove('minimized');
+                    this.focusWindow(windowEl);
+                } else if (windowEl.style.zIndex == this.windowZIndex - 1) {
+                    this.minimizeWindow(windowEl);
+                } else {
+                    this.focusWindow(windowEl);
+                }
+            });
+        } else {
+            // For apps not in the permanent dock, add to running apps section
+            const runningApps = document.getElementById('dock-running-apps');
+            if (runningApps) {
+                const appEl = document.createElement('div');
+                appEl.className = 'dock-item running';
+                appEl.dataset.id = id;
+                appEl.innerHTML = icon;
+
+                appEl.addEventListener('click', () => {
+                    if (windowEl.classList.contains('minimized')) {
+                        windowEl.classList.remove('minimized');
+                        this.focusWindow(windowEl);
+                    } else if (windowEl.style.zIndex == this.windowZIndex - 1) {
+                        this.minimizeWindow(windowEl);
+                    } else {
+                        this.focusWindow(windowEl);
+                    }
+                });
+
+                runningApps.appendChild(appEl);
+            }
+        }
+    }
+
+    removeFromDock(id) {
+        // Remove running indicator from permanent dock item
+        const dockItem = document.querySelector(`.dock-item[data-app="${id}"]`);
+        if (dockItem) {
+            dockItem.classList.remove('running');
+        }
+
+        // Remove from running apps section if present
+        const runningApp = document.querySelector(`#dock-running-apps .dock-item[data-id="${id}"]`);
+        if (runningApp) {
+            runningApp.remove();
+        }
+    }
+
+    addToTaskbar(id, title, icon, windowEl) {
+        // Use the new dock system
+        this.addToDock(id, title, icon, windowEl);
+
+        // Keep old taskbar for compatibility (if it exists)
+        const taskbarApps = document.getElementById('taskbar-apps');
+        if (taskbarApps) {
+            const appEl = document.createElement('div');
+            appEl.className = 'taskbar-app active';
+            appEl.dataset.id = id;
+            appEl.innerHTML = `
+                <div class="icon">${icon}</div>
+                <div class="label">${title}</div>
+            `;
+
+            appEl.addEventListener('click', () => {
+                if (windowEl.classList.contains('minimized')) {
+                    windowEl.classList.remove('minimized');
+                    this.focusWindow(windowEl);
+                } else if (windowEl.style.zIndex == this.windowZIndex - 1) {
+                    this.minimizeWindow(windowEl);
+                } else {
+                    this.focusWindow(windowEl);
+                }
+            });
+
+            taskbarApps.appendChild(appEl);
+        }
     }
 
     createNotificationContainer() {
@@ -735,8 +837,8 @@ class NovaOS {
                     this.openApp('settings');
                 } else if (action === 'about') {
                     this.showNotification(
-                        'NovaOS 25U11.1',
-                        'A modern web-based operating system. Built with vanilla JavaScript.',
+                        'NovaOS 25U11.2',
+                        'A modern web-based operating system with macOS-style UI. Built with vanilla JavaScript.',
                         'info'
                     );
                 }

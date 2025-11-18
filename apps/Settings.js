@@ -11,7 +11,8 @@ class Settings {
             font: 'system',
             animations: true,
             blur: true,
-            wallpaper: 'default'
+            wallpaper: 'default',
+            accentColor: 'blue'
         };
 
         const saved = localStorage.getItem('novaos_settings');
@@ -57,6 +58,21 @@ class Settings {
                                 <option value="dark" ${this.settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
                                 <option value="light" ${this.settings.theme === 'light' ? 'selected' : ''}>Light</option>
                                 <option value="auto" ${this.settings.theme === 'auto' ? 'selected' : ''}>Auto (System)</option>
+                            </select>
+                        </div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Accent Color</div>
+                                <div class="settings-option-description">Choose your preferred accent color</div>
+                            </div>
+                            <select class="settings-select" id="accent-select">
+                                <option value="blue" ${this.settings.accentColor === 'blue' ? 'selected' : ''}>Blue</option>
+                                <option value="purple" ${this.settings.accentColor === 'purple' ? 'selected' : ''}>Purple</option>
+                                <option value="pink" ${this.settings.accentColor === 'pink' ? 'selected' : ''}>Pink</option>
+                                <option value="red" ${this.settings.accentColor === 'red' ? 'selected' : ''}>Red</option>
+                                <option value="orange" ${this.settings.accentColor === 'orange' ? 'selected' : ''}>Orange</option>
+                                <option value="green" ${this.settings.accentColor === 'green' ? 'selected' : ''}>Green</option>
+                                <option value="teal" ${this.settings.accentColor === 'teal' ? 'selected' : ''}>Teal</option>
                             </select>
                         </div>
                     </div>
@@ -129,7 +145,7 @@ class Settings {
                         <div class="settings-section-title">System Information</div>
                         <div class="settings-option">
                             <div class="settings-option-label">Operating System</div>
-                            <div class="setting-value">NovaOS 25U11.1</div>
+                            <div class="setting-value">NovaOS 25U11.2</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Current User</div>
@@ -151,11 +167,15 @@ class Settings {
                         <div class="settings-section-title">About</div>
                         <div class="settings-option">
                             <div class="settings-option-label">Version</div>
-                            <div class="setting-value">25U11.1</div>
+                            <div class="setting-value">25U11.2</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Build Date</div>
                             <div class="setting-value">2025-11-18</div>
+                        </div>
+                        <div class="settings-option">
+                            <div class="settings-option-label">Release Notes</div>
+                            <div class="setting-value">macOS UI Update</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Codename</div>
@@ -282,12 +302,23 @@ class Settings {
             });
         }
 
+        // Accent color selector
+        const accentSelect = windowEl.querySelector('#accent-select');
+        if (accentSelect) {
+            accentSelect.addEventListener('change', (e) => {
+                this.settings.accentColor = e.target.value;
+                this.saveSettings();
+                this.applyAccentColor();
+            });
+        }
+
         // Apply settings on init
         this.applyTheme();
         this.applyFont();
         this.applyAnimations();
         this.applyBlur();
         this.applyWallpaper();
+        this.applyAccentColor();
     }
 
     applyTheme() {
@@ -351,6 +382,21 @@ class Settings {
         };
 
         desktop.style.background = wallpapers[this.settings.wallpaper] || wallpapers.default;
+    }
+
+    applyAccentColor() {
+        const accentColors = {
+            blue: '#007AFF',
+            purple: '#5856D6',
+            pink: '#FF2D55',
+            red: '#FF3B30',
+            orange: '#FF9500',
+            green: '#34C759',
+            teal: '#5AC8FA'
+        };
+
+        const color = accentColors[this.settings.accentColor] || accentColors.blue;
+        document.documentElement.style.setProperty('--primary-color', color);
     }
 
     async loadChangelog(windowEl) {
