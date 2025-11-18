@@ -6,6 +6,7 @@ class NovaOS {
         this.windowZIndex = 100;
         this.fileSystem = null;
         this.apps = {};
+        this.maxWindows = 5;
         this.init();
     }
 
@@ -286,6 +287,9 @@ class NovaOS {
         this.apps.terminal = new Terminal(this);
         this.apps.textEditor = new TextEditor(this);
         this.apps.calculator = new Calculator(this);
+        this.apps.imageViewer = new ImageViewer(this);
+        this.apps.fileViewer = new FileViewer(this);
+        this.apps.browser = new Browser(this);
         this.apps.settings = new Settings(this);
     }
 
@@ -294,6 +298,15 @@ class NovaOS {
 
         // Initialize apps
         this.initApps();
+
+        // Create notification container
+        this.createNotificationContainer();
+
+        // Initialize desktop dragging
+        this.initDesktopDragging();
+
+        // Initialize context menu
+        this.initContextMenu();
 
         // Update current user name
         document.getElementById('current-user-name').textContent = this.currentUser;
@@ -352,12 +365,25 @@ class NovaOS {
             return;
         }
 
+        // Check window limit
+        if (this.windows.size >= this.maxWindows) {
+            this.showNotification(
+                'Window Limit Reached',
+                `Maximum of ${this.maxWindows} windows can be open at once. Close some windows to open more.`,
+                'warning'
+            );
+            return;
+        }
+
         // Map app names to app instances
         const appMap = {
             'file-explorer': this.apps.fileExplorer,
             'terminal': this.apps.terminal,
             'text-editor': this.apps.textEditor,
             'calculator': this.apps.calculator,
+            'image-viewer': this.apps.imageViewer,
+            'file-viewer': this.apps.fileViewer,
+            'browser': this.apps.browser,
             'settings': this.apps.settings
         };
 
@@ -585,6 +611,138 @@ class NovaOS {
         });
 
         taskbarApps.appendChild(appEl);
+    }
+
+    createNotificationContainer() {
+        if (!document.querySelector('.notification-container')) {
+            const container = document.createElement('div');
+            container.className = 'notification-container';
+            document.body.appendChild(container);
+        }
+    }
+
+    showNotification(title, message, type = 'info') {
+        const container = document.querySelector('.notification-container');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+
+        const iconMap = {
+            info: 'ph-info',
+            warning: 'ph-warning',
+            error: 'ph-x-circle',
+            success: 'ph-check-circle'
+        };
+
+        notification.innerHTML = `
+            <i class="ph ${iconMap[type] || iconMap.info} notification-icon"></i>
+            <div class="notification-content">
+                <div class="notification-title">${title}</div>
+                <div class="notification-message">${message}</div>
+            </div>
+        `;
+
+        container.appendChild(notification);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            notification.classList.add('closing');
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
+
+    initDesktopDragging() {
+        let draggedIcon = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        document.querySelectorAll('.desktop-icon').forEach(icon => {
+            icon.addEventListener('mousedown', (e) => {
+                if (e.detail === 1) { // Single click (not double)
+                    draggedIcon = icon;
+                    const rect = icon.getBoundingClientRect();
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+                    icon.classList.add('dragging');
+                    icon.style.position = 'absolute';
+                    icon.style.zIndex = '1000';
+                }
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (draggedIcon) {
+                const x = e.clientX - offsetX;
+                const y = e.clientY - offsetY;
+                draggedIcon.style.left = `${x}px`;
+                draggedIcon.style.top = `${y}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (draggedIcon) {
+                draggedIcon.classList.remove('dragging');
+                draggedIcon = null;
+            }
+        });
+    }
+
+    initContextMenu() {
+        // Create context menu
+        const contextMenu = document.createElement('div');
+        contextMenu.className = 'context-menu';
+        contextMenu.innerHTML = `
+            <div class="context-menu-item" data-action="refresh">
+                <i class="ph ph-arrow-clockwise"></i>
+                Refresh Desktop
+            </div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" data-action="settings">
+                <i class="ph ph-gear"></i>
+                Settings
+            </div>
+            <div class="context-menu-item" data-action="about">
+                <i class="ph ph-info"></i>
+                About NovaOS
+            </div>
+        `;
+        document.body.appendChild(contextMenu);
+
+        // Show context menu on right-click
+        const desktop = document.querySelector('.desktop-background');
+        desktop.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            contextMenu.style.left = `${e.clientX}px`;
+            contextMenu.style.top = `${e.clientY}px`;
+            contextMenu.classList.add('active');
+        });
+
+        // Hide context menu on click
+        document.addEventListener('click', (e) => {
+            if (!contextMenu.contains(e.target)) {
+                contextMenu.classList.remove('active');
+            }
+        });
+
+        // Handle context menu actions
+        contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                if (action === 'refresh') {
+                    location.reload();
+                } else if (action === 'settings') {
+                    this.openApp('settings');
+                } else if (action === 'about') {
+                    this.showNotification(
+                        'NovaOS 25U11.1',
+                        'A modern web-based operating system. Built with vanilla JavaScript.',
+                        'info'
+                    );
+                }
+                contextMenu.classList.remove('active');
+            });
+        });
     }
 
     logout() {
