@@ -99,26 +99,297 @@
         <!-- Top Bar (macOS Menu Bar) -->
         <div class="top-bar">
             <div class="top-bar-left">
-                <div class="apple-logo">
+                <div class="apple-logo" id="apple-menu-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                         <path d="M17.6 13.8c0-3 2.5-4.5 2.6-4.5-1.4-2.1-3.6-2.3-4.4-2.4-1.9-.2-3.6 1.1-4.6 1.1-.9 0-2.4-1.1-4-1.1-2 0-3.9 1.2-5 3C.3 12.9 1.9 17.6 3.8 20c.9 1.2 2 2.5 3.5 2.5 1.5-.1 2.1-1 3.9-1 1.8 0 2.3 1 3.9 1 1.6 0 2.5-1.2 3.4-2.4.6-.8 1-1.6 1.3-2.5-2.7-1.1-3.2-4.3-3.2-4.8zM14.7 5.3c.8-.9 1.3-2.2 1.1-3.5-1.1 0-2.5.7-3.3 1.7-.7.8-1.3 2.1-1.2 3.4 1.3.1 2.6-.6 3.4-1.6z"/>
                     </svg>
                 </div>
                 <div class="top-bar-menu-item active" id="app-menu-title">NovaOS</div>
-                <div class="top-bar-menu-item">File</div>
-                <div class="top-bar-menu-item">Edit</div>
-                <div class="top-bar-menu-item">View</div>
-                <div class="top-bar-menu-item">Go</div>
-                <div class="top-bar-menu-item">Window</div>
-                <div class="top-bar-menu-item">Help</div>
+                <div class="top-bar-menu-item" id="menu-file">File</div>
+                <div class="top-bar-menu-item" id="menu-edit">Edit</div>
+                <div class="top-bar-menu-item" id="menu-view">View</div>
+                <div class="top-bar-menu-item" id="menu-go">Go</div>
+                <div class="top-bar-menu-item" id="menu-window">Window</div>
+                <div class="top-bar-menu-item" id="menu-help">Help</div>
             </div>
             <div class="top-bar-right">
-                <div class="top-bar-icon"><i class="ph ph-battery-charging"></i></div>
-                <div class="top-bar-icon"><i class="ph ph-wifi-high"></i></div>
+                <div class="top-bar-icon" id="battery-icon"><i class="ph ph-battery-charging"></i><span class="battery-percentage">100%</span></div>
+                <div class="top-bar-icon" id="wifi-icon"><i class="ph ph-wifi-high"></i></div>
                 <div class="top-bar-icon" id="user-menu-icon"><i class="ph ph-user-circle"></i></div>
-                <div class="top-bar-icon"><i class="ph ph-magnifying-glass"></i></div>
+                <div class="top-bar-icon" id="spotlight-icon"><i class="ph ph-magnifying-glass"></i></div>
                 <div class="top-bar-icon" id="control-center-icon"><i class="ph ph-sliders-horizontal"></i></div>
                 <div class="top-bar-time" id="top-bar-time"></div>
+            </div>
+        </div>
+
+        <!-- Apple Menu Dropdown -->
+        <div class="apple-menu hidden" id="apple-menu">
+            <div class="apple-menu-item" data-action="about">
+                <span>About This Mac</span>
+            </div>
+            <div class="apple-menu-separator"></div>
+            <div class="apple-menu-item" data-action="preferences">
+                <span>System Preferences...</span>
+                <kbd>⌘,</kbd>
+            </div>
+            <div class="apple-menu-item" data-action="app-store">
+                <span>App Store...</span>
+            </div>
+            <div class="apple-menu-separator"></div>
+            <div class="apple-menu-item" data-action="recent-items">
+                <span>Recent Items</span>
+                <i class="ph ph-caret-right"></i>
+            </div>
+            <div class="apple-menu-separator"></div>
+            <div class="apple-menu-item" data-action="force-quit">
+                <span>Force Quit...</span>
+                <kbd>⌥⌘⎋</kbd>
+            </div>
+            <div class="apple-menu-separator"></div>
+            <div class="apple-menu-item" data-action="sleep">
+                <span>Sleep</span>
+            </div>
+            <div class="apple-menu-item" data-action="restart">
+                <span>Restart...</span>
+            </div>
+            <div class="apple-menu-item" data-action="shutdown">
+                <span>Shut Down...</span>
+            </div>
+            <div class="apple-menu-separator"></div>
+            <div class="apple-menu-item" data-action="lock">
+                <span>Lock Screen</span>
+                <kbd>⌃⌘Q</kbd>
+            </div>
+            <div class="apple-menu-item" data-action="logout">
+                <span>Log Out <span id="apple-menu-username">User</span>...</span>
+                <kbd>⇧⌘Q</kbd>
+            </div>
+        </div>
+
+        <!-- Control Center -->
+        <div class="control-center hidden" id="control-center">
+            <div class="control-center-section">
+                <div class="control-center-row">
+                    <div class="control-tile" id="wifi-tile">
+                        <div class="tile-icon"><i class="ph ph-wifi-high"></i></div>
+                        <div class="tile-label">Wi-Fi</div>
+                        <div class="tile-status">Connected</div>
+                    </div>
+                    <div class="control-tile" id="bluetooth-tile">
+                        <div class="tile-icon"><i class="ph ph-bluetooth"></i></div>
+                        <div class="tile-label">Bluetooth</div>
+                        <div class="tile-status">On</div>
+                    </div>
+                </div>
+                <div class="control-center-row">
+                    <div class="control-tile" id="airdrop-tile">
+                        <div class="tile-icon"><i class="ph ph-share-network"></i></div>
+                        <div class="tile-label">AirDrop</div>
+                        <div class="tile-status">Everyone</div>
+                    </div>
+                    <div class="control-tile" id="focus-tile">
+                        <div class="tile-icon"><i class="ph ph-moon"></i></div>
+                        <div class="tile-label">Focus</div>
+                        <div class="tile-status">Off</div>
+                    </div>
+                </div>
+            </div>
+            <div class="control-center-section">
+                <div class="control-slider">
+                    <div class="slider-icon"><i class="ph ph-sun-dim"></i></div>
+                    <div class="slider-track">
+                        <div class="slider-fill" id="brightness-fill" style="width: 75%"></div>
+                        <div class="slider-thumb" id="brightness-thumb"></div>
+                    </div>
+                    <div class="slider-icon"><i class="ph ph-sun"></i></div>
+                </div>
+                <div class="control-slider">
+                    <div class="slider-icon"><i class="ph ph-speaker-low"></i></div>
+                    <div class="slider-track">
+                        <div class="slider-fill" id="volume-fill" style="width: 50%"></div>
+                        <div class="slider-thumb" id="volume-thumb"></div>
+                    </div>
+                    <div class="slider-icon"><i class="ph ph-speaker-high"></i></div>
+                </div>
+            </div>
+            <div class="control-center-section">
+                <div class="control-center-row media">
+                    <div class="media-tile" id="music-tile">
+                        <div class="media-icon"><i class="ph ph-music-note"></i></div>
+                        <div class="media-info">
+                            <div class="media-title">Not Playing</div>
+                            <div class="media-artist">Music</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spotlight Search -->
+        <div class="spotlight-overlay hidden" id="spotlight-overlay">
+            <div class="spotlight-container">
+                <div class="spotlight-search-box">
+                    <i class="ph ph-magnifying-glass"></i>
+                    <input type="text" id="spotlight-input" placeholder="Spotlight Search" autocomplete="off">
+                </div>
+                <div class="spotlight-results" id="spotlight-results">
+                    <div class="spotlight-category">
+                        <div class="spotlight-category-title">Applications</div>
+                        <div class="spotlight-items" id="spotlight-apps"></div>
+                    </div>
+                    <div class="spotlight-category">
+                        <div class="spotlight-category-title">Files</div>
+                        <div class="spotlight-items" id="spotlight-files"></div>
+                    </div>
+                    <div class="spotlight-category">
+                        <div class="spotlight-category-title">System</div>
+                        <div class="spotlight-items" id="spotlight-system"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Popup -->
+        <div class="calendar-popup hidden" id="calendar-popup">
+            <div class="calendar-header">
+                <div class="calendar-month" id="calendar-month">November 2025</div>
+                <div class="calendar-nav">
+                    <button class="calendar-nav-btn" id="cal-prev"><i class="ph ph-caret-left"></i></button>
+                    <button class="calendar-nav-btn" id="cal-next"><i class="ph ph-caret-right"></i></button>
+                </div>
+            </div>
+            <div class="calendar-weekdays">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="calendar-days" id="calendar-days"></div>
+            <div class="calendar-footer">
+                <div class="calendar-time" id="calendar-time">12:00 PM</div>
+            </div>
+        </div>
+
+        <!-- WiFi Menu -->
+        <div class="wifi-menu hidden" id="wifi-menu">
+            <div class="wifi-menu-header">
+                <span>Wi-Fi</span>
+                <div class="wifi-toggle active" id="wifi-toggle">
+                    <div class="wifi-toggle-slider"></div>
+                </div>
+            </div>
+            <div class="wifi-menu-separator"></div>
+            <div class="wifi-network connected">
+                <i class="ph ph-wifi-high"></i>
+                <span>NovaNetwork</span>
+                <i class="ph ph-check"></i>
+            </div>
+            <div class="wifi-network">
+                <i class="ph ph-wifi-medium"></i>
+                <span>Guest-WiFi</span>
+            </div>
+            <div class="wifi-network">
+                <i class="ph ph-wifi-low"></i>
+                <span>Neighbor-5G</span>
+            </div>
+            <div class="wifi-menu-separator"></div>
+            <div class="wifi-menu-item">
+                <span>Network Preferences...</span>
+            </div>
+        </div>
+
+        <!-- Battery Menu -->
+        <div class="battery-menu hidden" id="battery-menu">
+            <div class="battery-menu-header">
+                <i class="ph ph-battery-charging"></i>
+                <div class="battery-info">
+                    <div class="battery-level">100%</div>
+                    <div class="battery-status">Power Source: Battery</div>
+                </div>
+            </div>
+            <div class="battery-menu-separator"></div>
+            <div class="battery-apps">
+                <div class="battery-app">
+                    <span>Browser</span>
+                    <span class="battery-app-usage">23%</span>
+                </div>
+                <div class="battery-app">
+                    <span>Terminal</span>
+                    <span class="battery-app-usage">12%</span>
+                </div>
+            </div>
+            <div class="battery-menu-separator"></div>
+            <div class="battery-menu-item">
+                <span>Battery Preferences...</span>
+            </div>
+        </div>
+
+        <!-- About This Mac Window -->
+        <div class="about-mac-overlay hidden" id="about-mac-overlay">
+            <div class="about-mac-window">
+                <div class="about-mac-header">
+                    <div class="about-mac-close" id="about-mac-close">
+                        <div class="window-control close"></div>
+                    </div>
+                </div>
+                <div class="about-mac-content">
+                    <div class="about-mac-logo">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="about-nova-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="100" cy="100" r="60" fill="none" stroke="url(#about-nova-gradient)" stroke-width="6"/>
+                            <path d="M 100 40 L 120 80 L 100 70 L 80 80 Z" fill="url(#about-nova-gradient)"/>
+                            <circle cx="100" cy="100" r="15" fill="url(#about-nova-gradient)"/>
+                        </svg>
+                    </div>
+                    <h1 class="about-mac-title">NovaOS</h1>
+                    <div class="about-mac-version">Version 25U11.3</div>
+                    <div class="about-mac-specs">
+                        <div class="spec-row">
+                            <span class="spec-label">Chip</span>
+                            <span class="spec-value">Nova Silicon</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Memory</span>
+                            <span class="spec-value">16 GB</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Storage</span>
+                            <span class="spec-value" id="about-storage">256 GB</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Serial Number</span>
+                            <span class="spec-value">NOVA-2025-X1</span>
+                        </div>
+                    </div>
+                    <div class="about-mac-buttons">
+                        <button class="about-btn" id="about-more-info">More Info...</button>
+                        <button class="about-btn" id="about-system-report">System Report...</button>
+                        <button class="about-btn primary" id="about-software-update">Software Update...</button>
+                    </div>
+                    <div class="about-mac-footer">
+                        <div class="about-copyright">TM and © 2025 Nova Technologies.<br>All Rights Reserved.</div>
+                        <div class="about-license">License Agreement</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Force Quit Applications -->
+        <div class="force-quit-overlay hidden" id="force-quit-overlay">
+            <div class="force-quit-window">
+                <div class="force-quit-header">
+                    <h2>Force Quit Applications</h2>
+                    <p>If an app doesn't respond for a while, select it and click Force Quit.</p>
+                </div>
+                <div class="force-quit-list" id="force-quit-list">
+                    <!-- Running apps will be listed here -->
+                </div>
+                <div class="force-quit-footer">
+                    <button class="force-quit-btn" id="force-quit-cancel">Cancel</button>
+                    <button class="force-quit-btn danger" id="force-quit-btn">Force Quit</button>
+                </div>
             </div>
         </div>
 

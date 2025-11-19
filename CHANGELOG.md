@@ -5,6 +5,40 @@ All notable changes to NovaOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [25U11.3] - 2025-11-19
+
+### Added
+- **Complete Top Bar Functionality**: Full macOS-style menu bar with all interactive menus
+  - **Apple Menu**: About This Mac, System Preferences, Force Quit, Sleep, Restart, Shutdown, Lock Screen, Log Out
+  - **Dynamic App Menus**: File, Edit, View, Go, Window, Help menus with keyboard shortcuts
+  - **Control Center**: WiFi, Bluetooth, AirDrop, Focus toggles with brightness/volume sliders
+  - **Spotlight Search**: Search apps, files, and system functions with Cmd+Space shortcut
+  - **Calendar Popup**: Click time to show calendar with month navigation
+  - **WiFi Menu**: Network list with connection status and toggle
+  - **Battery Menu**: Battery percentage, power source, and app usage stats
+- **About This Mac Window**: Comprehensive system info dialog (winver-like)
+  - NovaOS logo and version display
+  - System specs (Chip, Memory, Storage, Serial Number)
+  - More Info, System Report, and Software Update buttons
+  - Copyright and license information
+- **Force Quit Applications**: Dialog to force quit unresponsive apps
+- **Icon Pack System**: Choose from 5 Phosphor icon styles
+  - Phosphor (Default), Filled, Bold, Duotone, Thin
+  - Live preview in Settings
+  - System-wide icon style switching
+
+### Changed
+- Top bar icons now show battery percentage
+- Menu items are now fully interactive with proper dropdown menus
+- Improved keyboard shortcuts (added Cmd+Space for Spotlight, F4 for Launchpad)
+- Updated Settings with new Icon Pack tab and Spotlight shortcut reference
+
+### Technical
+- Global menu management system with closeAllMenus()
+- Calendar rendering with proper month/year navigation
+- Spotlight search with real-time filtering
+- Icon pack application via CSS class manipulation
+
 ## [25U11.1] - 2025-11-18
 
 ### Added
