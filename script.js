@@ -349,6 +349,31 @@ class NovaOS {
                 startMenu.classList.add('hidden');
             }
         });
+
+        // Global click handler to close all menus
+        document.addEventListener('click', (e) => {
+            // Close menus if clicking outside
+            const menus = [
+                'apple-menu', 'control-center', 'calendar-popup',
+                'wifi-menu', 'battery-menu'
+            ];
+
+            menus.forEach(menuId => {
+                const menu = document.getElementById(menuId);
+                if (menu && !menu.contains(e.target)) {
+                    const trigger = document.querySelector(`[id$="${menuId.replace('-menu', '-icon')}"], [id$="${menuId.replace('-popup', '')}"], #apple-menu-btn, #top-bar-time`);
+                    if (!trigger || !trigger.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                }
+            });
+
+            // Remove dropdown menus
+            const dropdown = document.querySelector('.dropdown-menu');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.remove();
+            }
+        });
     }
 
     updateDesktopTime() {
@@ -743,7 +768,622 @@ class NovaOS {
 
     initTopBarMenus() {
         this.currentAppMenus = null;
+        this.calendarDate = new Date();
         this.updateTopBarForApp('NovaOS', null);
+
+        // Initialize Apple Menu
+        this.initAppleMenu();
+
+        // Initialize Control Center
+        this.initControlCenter();
+
+        // Initialize Spotlight
+        this.initSpotlight();
+
+        // Initialize Calendar
+        this.initCalendar();
+
+        // Initialize WiFi Menu
+        this.initWifiMenu();
+
+        // Initialize Battery Menu
+        this.initBatteryMenu();
+
+        // Initialize About This Mac
+        this.initAboutMac();
+
+        // Initialize Force Quit
+        this.initForceQuit();
+
+        // Initialize dropdown menus
+        this.initDropdownMenus();
+    }
+
+    initAppleMenu() {
+        const appleBtn = document.getElementById('apple-menu-btn');
+        const appleMenu = document.getElementById('apple-menu');
+        if (!appleBtn || !appleMenu) return;
+
+        appleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeAllMenus();
+            appleMenu.classList.toggle('hidden');
+            document.getElementById('apple-menu-username').textContent = this.currentUser;
+        });
+
+        // Handle menu items
+        appleMenu.querySelectorAll('.apple-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                appleMenu.classList.add('hidden');
+
+                switch(action) {
+                    case 'about':
+                        this.showAboutMac();
+                        break;
+                    case 'preferences':
+                        this.openApp('settings');
+                        break;
+                    case 'app-store':
+                        this.showNotification('App Store', 'App Store coming soon!', 'info');
+                        break;
+                    case 'force-quit':
+                        this.showForceQuit();
+                        break;
+                    case 'sleep':
+                        this.showNotification('Sleep', 'Sleep mode coming soon!', 'info');
+                        break;
+                    case 'restart':
+                        location.reload();
+                        break;
+                    case 'shutdown':
+                        this.shutdown();
+                        break;
+                    case 'lock':
+                        this.showNotification('Lock Screen', 'Lock screen coming soon!', 'info');
+                        break;
+                    case 'logout':
+                        this.logout();
+                        break;
+                }
+            });
+        });
+    }
+
+    initControlCenter() {
+        const ccBtn = document.getElementById('control-center-icon');
+        const cc = document.getElementById('control-center');
+        if (!ccBtn || !cc) return;
+
+        ccBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeAllMenus();
+            cc.classList.toggle('hidden');
+        });
+
+        // Toggle tiles
+        cc.querySelectorAll('.control-tile').forEach(tile => {
+            tile.addEventListener('click', () => {
+                tile.classList.toggle('active');
+                const status = tile.querySelector('.tile-status');
+                if (status) {
+                    status.textContent = tile.classList.contains('active') ? 'On' : 'Off';
+                }
+            });
+        });
+
+        // Sliders
+        const brightnessTrack = cc.querySelector('#brightness-fill')?.parentElement;
+        const volumeTrack = cc.querySelector('#volume-fill')?.parentElement;
+
+        [brightnessTrack, volumeTrack].forEach(track => {
+            if (!track) return;
+            track.addEventListener('click', (e) => {
+                const rect = track.getBoundingClientRect();
+                const percent = ((e.clientX - rect.left) / rect.width) * 100;
+                const fill = track.querySelector('.slider-fill');
+                if (fill) fill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+            });
+        });
+    }
+
+    initSpotlight() {
+        const spotlightBtn = document.getElementById('spotlight-icon');
+        const spotlightOverlay = document.getElementById('spotlight-overlay');
+        const spotlightInput = document.getElementById('spotlight-input');
+        if (!spotlightBtn || !spotlightOverlay || !spotlightInput) return;
+
+        const apps = [
+            { id: 'file-explorer', name: 'Files', icon: 'ph-folder', type: 'app' },
+            { id: 'terminal', name: 'Terminal', icon: 'ph-terminal-window', type: 'app' },
+            { id: 'text-editor', name: 'TextEdit', icon: 'ph-note-pencil', type: 'app' },
+            { id: 'calculator', name: 'Calculator', icon: 'ph-calculator', type: 'app' },
+            { id: 'image-viewer', name: 'Images', icon: 'ph-image', type: 'app' },
+            { id: 'file-viewer', name: 'Viewer', icon: 'ph-files', type: 'app' },
+            { id: 'browser', name: 'Browser', icon: 'ph-globe', type: 'app' },
+            { id: 'settings', name: 'Settings', icon: 'ph-gear', type: 'app' }
+        ];
+
+        const systemItems = [
+            { id: 'about', name: 'About This Mac', icon: 'ph-info', action: () => this.showAboutMac() },
+            { id: 'preferences', name: 'System Preferences', icon: 'ph-gear', action: () => this.openApp('settings') },
+            { id: 'lock', name: 'Lock Screen', icon: 'ph-lock', action: () => this.showNotification('Lock', 'Lock coming soon', 'info') },
+            { id: 'logout', name: 'Log Out', icon: 'ph-sign-out', action: () => this.logout() }
+        ];
+
+        const showSpotlight = () => {
+            this.closeAllMenus();
+            spotlightOverlay.classList.remove('hidden');
+            spotlightInput.value = '';
+            spotlightInput.focus();
+            this.updateSpotlightResults('', apps, systemItems);
+        };
+
+        const hideSpotlight = () => {
+            spotlightOverlay.classList.add('hidden');
+        };
+
+        spotlightBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showSpotlight();
+        });
+
+        // Cmd+Space shortcut
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.code === 'Space') {
+                e.preventDefault();
+                if (spotlightOverlay.classList.contains('hidden')) {
+                    showSpotlight();
+                } else {
+                    hideSpotlight();
+                }
+            }
+        });
+
+        spotlightOverlay.addEventListener('click', (e) => {
+            if (e.target === spotlightOverlay) {
+                hideSpotlight();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !spotlightOverlay.classList.contains('hidden')) {
+                hideSpotlight();
+            }
+        });
+
+        spotlightInput.addEventListener('input', (e) => {
+            this.updateSpotlightResults(e.target.value, apps, systemItems);
+        });
+
+        spotlightInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const selected = document.querySelector('.spotlight-item.selected') ||
+                                 document.querySelector('.spotlight-item');
+                if (selected) selected.click();
+            }
+        });
+    }
+
+    updateSpotlightResults(query, apps, systemItems) {
+        const appsContainer = document.getElementById('spotlight-apps');
+        const filesContainer = document.getElementById('spotlight-files');
+        const systemContainer = document.getElementById('spotlight-system');
+        if (!appsContainer || !filesContainer || !systemContainer) return;
+
+        const q = query.toLowerCase();
+
+        // Filter apps
+        const filteredApps = apps.filter(app =>
+            app.name.toLowerCase().includes(q)
+        );
+
+        appsContainer.innerHTML = filteredApps.map((app, i) => `
+            <div class="spotlight-item ${i === 0 && q ? 'selected' : ''}" data-app="${app.id}">
+                <div class="spotlight-item-icon"><i class="ph ${app.icon}"></i></div>
+                <div class="spotlight-item-info">
+                    <div class="spotlight-item-name">${app.name}</div>
+                    <div class="spotlight-item-path">Application</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Filter files
+        const files = this.fileSystem ? this.fileSystem.listDirectory('/') : [];
+        const filteredFiles = files.filter(file =>
+            file.name.toLowerCase().includes(q)
+        );
+
+        filesContainer.innerHTML = filteredFiles.slice(0, 5).map(file => `
+            <div class="spotlight-item" data-file="/${file.name}">
+                <div class="spotlight-item-icon"><i class="ph ${file.type === 'directory' ? 'ph-folder' : 'ph-file'}"></i></div>
+                <div class="spotlight-item-info">
+                    <div class="spotlight-item-name">${file.name}</div>
+                    <div class="spotlight-item-path">/${file.name}</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Filter system items
+        const filteredSystem = systemItems.filter(item =>
+            item.name.toLowerCase().includes(q)
+        );
+
+        systemContainer.innerHTML = filteredSystem.map(item => `
+            <div class="spotlight-item" data-system="${item.id}">
+                <div class="spotlight-item-icon"><i class="ph ${item.icon}"></i></div>
+                <div class="spotlight-item-info">
+                    <div class="spotlight-item-name">${item.name}</div>
+                    <div class="spotlight-item-path">System</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        document.querySelectorAll('.spotlight-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const appId = item.dataset.app;
+                const systemId = item.dataset.system;
+
+                if (appId) {
+                    this.openApp(appId);
+                } else if (systemId) {
+                    const systemItem = systemItems.find(s => s.id === systemId);
+                    if (systemItem) systemItem.action();
+                }
+
+                document.getElementById('spotlight-overlay').classList.add('hidden');
+            });
+        });
+    }
+
+    initCalendar() {
+        const timeEl = document.getElementById('top-bar-time');
+        const calendarPopup = document.getElementById('calendar-popup');
+        if (!timeEl || !calendarPopup) return;
+
+        timeEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeAllMenus();
+            calendarPopup.classList.toggle('hidden');
+            this.renderCalendar();
+        });
+
+        document.getElementById('cal-prev')?.addEventListener('click', () => {
+            this.calendarDate.setMonth(this.calendarDate.getMonth() - 1);
+            this.renderCalendar();
+        });
+
+        document.getElementById('cal-next')?.addEventListener('click', () => {
+            this.calendarDate.setMonth(this.calendarDate.getMonth() + 1);
+            this.renderCalendar();
+        });
+    }
+
+    renderCalendar() {
+        const monthEl = document.getElementById('calendar-month');
+        const daysEl = document.getElementById('calendar-days');
+        const timeEl = document.getElementById('calendar-time');
+        if (!monthEl || !daysEl) return;
+
+        const now = new Date();
+        const year = this.calendarDate.getFullYear();
+        const month = this.calendarDate.getMonth();
+
+        monthEl.textContent = this.calendarDate.toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric'
+        });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        let html = '';
+
+        // Previous month days
+        for (let i = firstDay - 1; i >= 0; i--) {
+            html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
+        }
+
+        // Current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            const isToday = i === now.getDate() &&
+                           month === now.getMonth() &&
+                           year === now.getFullYear();
+            html += `<div class="calendar-day ${isToday ? 'today' : ''}">${i}</div>`;
+        }
+
+        // Next month days
+        const totalCells = firstDay + daysInMonth;
+        const remaining = 42 - totalCells;
+        for (let i = 1; i <= remaining; i++) {
+            html += `<div class="calendar-day other-month">${i}</div>`;
+        }
+
+        daysEl.innerHTML = html;
+
+        if (timeEl) {
+            timeEl.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+    }
+
+    initWifiMenu() {
+        const wifiBtn = document.getElementById('wifi-icon');
+        const wifiMenu = document.getElementById('wifi-menu');
+        if (!wifiBtn || !wifiMenu) return;
+
+        wifiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeAllMenus();
+            wifiMenu.classList.toggle('hidden');
+        });
+
+        const toggle = document.getElementById('wifi-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        }
+    }
+
+    initBatteryMenu() {
+        const batteryBtn = document.getElementById('battery-icon');
+        const batteryMenu = document.getElementById('battery-menu');
+        if (!batteryBtn || !batteryMenu) return;
+
+        batteryBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeAllMenus();
+            batteryMenu.classList.toggle('hidden');
+        });
+    }
+
+    initAboutMac() {
+        const overlay = document.getElementById('about-mac-overlay');
+        const closeBtn = document.getElementById('about-mac-close');
+        if (!overlay || !closeBtn) return;
+
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('about-more-info')?.addEventListener('click', () => {
+            this.openApp('settings');
+            overlay.classList.add('hidden');
+        });
+
+        document.getElementById('about-system-report')?.addEventListener('click', () => {
+            this.showNotification('System Report', 'System Report coming soon!', 'info');
+        });
+
+        document.getElementById('about-software-update')?.addEventListener('click', () => {
+            this.showNotification('Software Update', 'NovaOS is up to date!', 'success');
+        });
+    }
+
+    showAboutMac() {
+        const overlay = document.getElementById('about-mac-overlay');
+        if (overlay) {
+            // Update storage info
+            const storageEl = document.getElementById('about-storage');
+            if (storageEl && this.fileSystem) {
+                const size = JSON.stringify(this.fileSystem.fs).length;
+                storageEl.textContent = `${(size / 1024).toFixed(2)} KB used`;
+            }
+            overlay.classList.remove('hidden');
+        }
+    }
+
+    initForceQuit() {
+        const overlay = document.getElementById('force-quit-overlay');
+        const list = document.getElementById('force-quit-list');
+        const cancelBtn = document.getElementById('force-quit-cancel');
+        const quitBtn = document.getElementById('force-quit-btn');
+        if (!overlay || !list) return;
+
+        cancelBtn?.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.add('hidden');
+            }
+        });
+
+        quitBtn?.addEventListener('click', () => {
+            const selected = list.querySelector('.force-quit-app.selected');
+            if (selected) {
+                const appId = selected.dataset.app;
+                const window = this.windows.get(appId);
+                if (window) {
+                    this.closeWindow(appId, window.element);
+                }
+            }
+            overlay.classList.add('hidden');
+        });
+    }
+
+    showForceQuit() {
+        const overlay = document.getElementById('force-quit-overlay');
+        const list = document.getElementById('force-quit-list');
+        if (!overlay || !list) return;
+
+        const icons = {
+            'file-explorer': 'ph-folder',
+            'terminal': 'ph-terminal-window',
+            'text-editor': 'ph-note-pencil',
+            'calculator': 'ph-calculator',
+            'image-viewer': 'ph-image',
+            'file-viewer': 'ph-files',
+            'browser': 'ph-globe',
+            'settings': 'ph-gear'
+        };
+
+        list.innerHTML = '';
+        this.windows.forEach((win, id) => {
+            const app = document.createElement('div');
+            app.className = 'force-quit-app';
+            app.dataset.app = id;
+            app.innerHTML = `
+                <div class="force-quit-app-icon"><i class="ph ${icons[id] || 'ph-app-window'}"></i></div>
+                <div class="force-quit-app-name">${win.title}</div>
+            `;
+            app.addEventListener('click', () => {
+                list.querySelectorAll('.force-quit-app').forEach(a => a.classList.remove('selected'));
+                app.classList.add('selected');
+            });
+            list.appendChild(app);
+        });
+
+        if (list.children.length === 0) {
+            list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--gray-text);">No apps running</div>';
+        }
+
+        overlay.classList.remove('hidden');
+    }
+
+    initDropdownMenus() {
+        // File, Edit, View, Go, Window, Help menus
+        const menuIds = ['menu-file', 'menu-edit', 'menu-view', 'menu-go', 'menu-window', 'menu-help'];
+
+        menuIds.forEach(menuId => {
+            const menuItem = document.getElementById(menuId);
+            if (!menuItem) return;
+
+            menuItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeAllMenus();
+
+                // Show relevant menu items
+                const menuType = menuId.replace('menu-', '');
+                this.showDropdownMenu(menuItem, menuType);
+            });
+        });
+    }
+
+    showDropdownMenu(trigger, type) {
+        // Remove existing dropdown
+        document.querySelector('.dropdown-menu')?.remove();
+
+        const menus = {
+            file: [
+                { label: 'New Window', shortcut: '⌘N', action: () => this.openApp('file-explorer') },
+                { label: 'New Tab', shortcut: '⌘T', disabled: true },
+                { separator: true },
+                { label: 'Open...', shortcut: '⌘O', disabled: true },
+                { label: 'Close Window', shortcut: '⌘W', action: () => {
+                    const active = this.getActiveWindow();
+                    if (active) this.closeWindow(active.dataset.id, active);
+                }},
+            ],
+            edit: [
+                { label: 'Undo', shortcut: '⌘Z', disabled: true },
+                { label: 'Redo', shortcut: '⇧⌘Z', disabled: true },
+                { separator: true },
+                { label: 'Cut', shortcut: '⌘X', disabled: true },
+                { label: 'Copy', shortcut: '⌘C', disabled: true },
+                { label: 'Paste', shortcut: '⌘V', disabled: true },
+                { label: 'Select All', shortcut: '⌘A', disabled: true },
+            ],
+            view: [
+                { label: 'Show Toolbar', disabled: true },
+                { label: 'Show Sidebar', disabled: true },
+                { separator: true },
+                { label: 'Enter Full Screen', shortcut: '⌃⌘F', action: () => {
+                    document.documentElement.requestFullscreen?.();
+                }},
+            ],
+            go: [
+                { label: 'Back', shortcut: '⌘[', disabled: true },
+                { label: 'Forward', shortcut: '⌘]', disabled: true },
+                { separator: true },
+                { label: 'Home', action: () => this.openApp('file-explorer') },
+                { label: 'Documents', disabled: true },
+                { label: 'Downloads', disabled: true },
+            ],
+            window: [
+                { label: 'Minimize', shortcut: '⌘M', action: () => {
+                    const active = this.getActiveWindow();
+                    if (active) this.minimizeWindow(active);
+                }},
+                { label: 'Zoom', action: () => {
+                    const active = this.getActiveWindow();
+                    if (active) this.toggleMaximize(active);
+                }},
+                { separator: true },
+                { label: 'Bring All to Front', disabled: true },
+            ],
+            help: [
+                { label: 'NovaOS Help', disabled: true },
+                { separator: true },
+                { label: 'About NovaOS', action: () => this.showAboutMac() },
+            ]
+        };
+
+        const items = menus[type] || [];
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown-menu';
+
+        const rect = trigger.getBoundingClientRect();
+        dropdown.style.left = `${rect.left}px`;
+
+        dropdown.innerHTML = items.map(item => {
+            if (item.separator) {
+                return '<div class="dropdown-separator"></div>';
+            }
+            return `
+                <div class="dropdown-item ${item.disabled ? 'disabled' : ''}" data-action="${item.label}">
+                    <span>${item.label}</span>
+                    ${item.shortcut ? `<kbd>${item.shortcut}</kbd>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        document.body.appendChild(dropdown);
+
+        // Add click handlers
+        dropdown.querySelectorAll('.dropdown-item:not(.disabled)').forEach((el, i) => {
+            const item = items.filter(it => !it.separator)[i];
+            if (item && item.action) {
+                el.addEventListener('click', () => {
+                    item.action();
+                    dropdown.remove();
+                });
+            }
+        });
+
+        // Show after adding to DOM
+        requestAnimationFrame(() => dropdown.classList.remove('hidden'));
+    }
+
+    getActiveWindow() {
+        const windows = Array.from(this.windows.values());
+        if (windows.length === 0) return null;
+
+        return windows
+            .map(w => ({ el: w.element, z: parseInt(w.element.style.zIndex) }))
+            .sort((a, b) => b.z - a.z)[0]?.el || null;
+    }
+
+    closeAllMenus() {
+        document.getElementById('apple-menu')?.classList.add('hidden');
+        document.getElementById('control-center')?.classList.add('hidden');
+        document.getElementById('calendar-popup')?.classList.add('hidden');
+        document.getElementById('wifi-menu')?.classList.add('hidden');
+        document.getElementById('battery-menu')?.classList.add('hidden');
+        document.querySelector('.dropdown-menu')?.remove();
     }
 
     updateTopBarForApp(appName, appMenus) {
@@ -753,7 +1393,6 @@ class NovaOS {
         }
 
         this.currentAppMenus = appMenus;
-        // TODO: Update menu items dynamically
     }
 
     addToDock(id, title, icon, windowEl) {

@@ -12,7 +12,8 @@ class Settings {
             animations: true,
             blur: true,
             wallpaper: 'default',
-            accentColor: 'blue'
+            accentColor: 'blue',
+            iconPack: 'phosphor'
         };
 
         const saved = localStorage.getItem('novaos_settings');
@@ -96,6 +97,31 @@ class Settings {
                             <br>0123456789 !@#$%^&*()
                         </div>
                     </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-title">Icon Pack</div>
+                        <div class="settings-option">
+                            <div>
+                                <div class="settings-option-label">Icon Style</div>
+                                <div class="settings-option-description">Choose your preferred icon style</div>
+                            </div>
+                            <select class="settings-select" id="icon-pack-select">
+                                <option value="phosphor" ${this.settings.iconPack === 'phosphor' ? 'selected' : ''}>Phosphor (Default)</option>
+                                <option value="phosphor-fill" ${this.settings.iconPack === 'phosphor-fill' ? 'selected' : ''}>Phosphor Filled</option>
+                                <option value="phosphor-bold" ${this.settings.iconPack === 'phosphor-bold' ? 'selected' : ''}>Phosphor Bold</option>
+                                <option value="phosphor-duotone" ${this.settings.iconPack === 'phosphor-duotone' ? 'selected' : ''}>Phosphor Duotone</option>
+                                <option value="phosphor-thin" ${this.settings.iconPack === 'phosphor-thin' ? 'selected' : ''}>Phosphor Thin</option>
+                            </select>
+                        </div>
+                        <div class="icon-pack-preview" id="icon-pack-preview">
+                            <i class="ph ph-folder"></i>
+                            <i class="ph ph-terminal-window"></i>
+                            <i class="ph ph-gear"></i>
+                            <i class="ph ph-calculator"></i>
+                            <i class="ph ph-globe"></i>
+                            <i class="ph ph-image"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Preferences Tab -->
@@ -152,7 +178,7 @@ class Settings {
                         <div class="settings-section-title">System Information</div>
                         <div class="settings-option">
                             <div class="settings-option-label">Operating System</div>
-                            <div class="setting-value">NovaOS 25U11.2</div>
+                            <div class="setting-value">NovaOS 25U11.3</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Current User</div>
@@ -174,15 +200,15 @@ class Settings {
                         <div class="settings-section-title">About</div>
                         <div class="settings-option">
                             <div class="settings-option-label">Version</div>
-                            <div class="setting-value">25U11.2</div>
+                            <div class="setting-value">25U11.3</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Build Date</div>
-                            <div class="setting-value">2025-11-18</div>
+                            <div class="setting-value">2025-11-19</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Release Notes</div>
-                            <div class="setting-value">macOS UI Update</div>
+                            <div class="setting-value">Top Bar & UI Enhancement</div>
                         </div>
                         <div class="settings-option">
                             <div class="settings-option-label">Codename</div>
@@ -196,6 +222,10 @@ class Settings {
                     <div class="settings-section">
                         <div class="settings-section-title">Keyboard Shortcuts</div>
                         <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>Space</kbd></span>
+                                <span class="shortcut-desc">Open Spotlight Search</span>
+                            </div>
                             <div class="shortcut-item">
                                 <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd> + <kbd>W</kbd></span>
                                 <span class="shortcut-desc">Close active window</span>
@@ -217,8 +247,12 @@ class Settings {
                                 <span class="shortcut-desc">Open Settings</span>
                             </div>
                             <div class="shortcut-item">
+                                <span class="shortcut-keys"><kbd>F4</kbd></span>
+                                <span class="shortcut-desc">Toggle Launchpad</span>
+                            </div>
+                            <div class="shortcut-item">
                                 <span class="shortcut-keys"><kbd>Esc</kbd></span>
-                                <span class="shortcut-desc">Close start menu</span>
+                                <span class="shortcut-desc">Close menus/dialogs</span>
                             </div>
                         </div>
                     </div>
@@ -319,6 +353,19 @@ class Settings {
             });
         }
 
+        // Icon pack selector
+        const iconPackSelect = windowEl.querySelector('#icon-pack-select');
+        const iconPreview = windowEl.querySelector('#icon-pack-preview');
+        if (iconPackSelect) {
+            iconPackSelect.addEventListener('change', (e) => {
+                this.settings.iconPack = e.target.value;
+                this.saveSettings();
+                this.applyIconPack();
+                this.updateIconPreview(iconPreview);
+            });
+            this.updateIconPreview(iconPreview);
+        }
+
         // Apply settings on init
         this.applyTheme();
         this.applyFont();
@@ -326,6 +373,7 @@ class Settings {
         this.applyBlur();
         this.applyWallpaper();
         this.applyAccentColor();
+        this.applyIconPack();
     }
 
     applyTheme() {
@@ -411,6 +459,50 @@ class Settings {
 
         const color = accentColors[this.settings.accentColor] || accentColors.blue;
         document.documentElement.style.setProperty('--primary-color', color);
+    }
+
+    applyIconPack() {
+        // Map icon pack names to Phosphor icon weight classes
+        const iconPackClasses = {
+            'phosphor': '',
+            'phosphor-fill': 'ph-fill',
+            'phosphor-bold': 'ph-bold',
+            'phosphor-duotone': 'ph-duotone',
+            'phosphor-thin': 'ph-thin'
+        };
+
+        const iconClass = iconPackClasses[this.settings.iconPack] || '';
+
+        // Update all icons in the document
+        document.querySelectorAll('.ph').forEach(icon => {
+            // Remove all weight classes
+            icon.classList.remove('ph-fill', 'ph-bold', 'ph-duotone', 'ph-thin');
+            // Add the new weight class if not default
+            if (iconClass) {
+                icon.classList.add(iconClass);
+            }
+        });
+    }
+
+    updateIconPreview(preview) {
+        if (!preview) return;
+
+        const iconPackClasses = {
+            'phosphor': '',
+            'phosphor-fill': 'ph-fill',
+            'phosphor-bold': 'ph-bold',
+            'phosphor-duotone': 'ph-duotone',
+            'phosphor-thin': 'ph-thin'
+        };
+
+        const iconClass = iconPackClasses[this.settings.iconPack] || '';
+
+        preview.querySelectorAll('.ph').forEach(icon => {
+            icon.classList.remove('ph-fill', 'ph-bold', 'ph-duotone', 'ph-thin');
+            if (iconClass) {
+                icon.classList.add(iconClass);
+            }
+        });
     }
 
     async loadChangelog(windowEl) {
